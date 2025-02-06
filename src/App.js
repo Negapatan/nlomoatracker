@@ -17,10 +17,12 @@ function App() {
   const [activeTab, setActiveTab] = useState('form');
   const [editingRecord, setEditingRecord] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   // Set up real-time listener for records
   useEffect(() => {
     setIsLoading(true);
+    setHasError(false);
     
     const q = query(
       collection(db, 'moa_records'),
@@ -54,6 +56,7 @@ function App() {
         console.error("Error fetching records:", error);
         toast.error('Error loading records');
         setIsLoading(false);
+        setHasError(true);
       }
     );
 
@@ -107,7 +110,12 @@ function App() {
               <div className="App">
                 <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
                 <div className="main-content">
-                  {isLoading ? (
+                  {hasError ? (
+                    <div className="error-container">
+                      <p>Error loading records. Please try refreshing the page.</p>
+                      <button onClick={() => window.location.reload()}>Refresh</button>
+                    </div>
+                  ) : isLoading ? (
                     <div className="loading-container">
                       <div className="loading-spinner"></div>
                       <p>Loading records...</p>
