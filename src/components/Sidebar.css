@@ -1,0 +1,401 @@
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  background-color: #800020;
+  color: var(--text-light);
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  width: 250px;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-header {
+  height: 70px;
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #600018;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #d4af37;
+  white-space: nowrap;
+}
+
+.collapse-button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #d4af37;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.collapse-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar.collapsed .collapse-button {
+  margin-left: auto;
+}
+
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 0;
+  height: 50px;
+}
+
+.sidebar.collapsed .collapse-button {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.sidebar.collapsed h2 {
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.sidebar-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0;
+}
+
+.bottom-section {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.logout-button {
+  padding: 0.875rem 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #FFD700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0.75rem 1rem;
+  width: calc(100% - 1.5rem);
+  transition: all 0.2s;
+}
+
+.contact-info {
+  padding: 1.5rem 1rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.nav-item-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-item i {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+}
+
+.nav-item span {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #d4af37;
+}
+
+.badge {
+  background-color: #d4af37;
+  color: #600018;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  padding: 0 0.75rem;
+  margin-top: auto;
+}
+
+.settings-button,
+.user-button {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.settings-button:hover,
+.user-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.user-role {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* Update contact info styles */
+.contact-info {
+  margin-top: auto;
+  padding: 1.5rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar.collapsed .contact-info {
+  padding: 0.5rem;
+}
+
+.contact-info h3 {
+  color: #d4af37;
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  cursor: default;
+}
+
+.sidebar.collapsed .contact-item {
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.contact-item:last-child {
+  margin-bottom: 0;
+}
+
+.contact-item i {
+  color: #d4af37;
+  font-size: 1.1rem;
+  margin-top: 0.2rem;
+}
+
+.sidebar.collapsed .contact-item i {
+  margin-top: 0;
+  font-size: 1.2rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  .sidebar.collapsed {
+    width: 100%;
+  }
+
+  .sidebar-content {
+    padding: 1rem 0;
+  }
+
+  .collapse-button {
+    display: none;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+
+  .contact-info {
+    display: none;
+  }
+}
+
+.logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.logout-button i {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+}
+
+.sidebar.collapsed .logout-button {
+  width: calc(100% - 1rem);
+  padding: 0.875rem;
+  justify-content: center;
+}
+
+.sidebar.collapsed .logout-button span {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .logout-button {
+    margin: 0.5rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Add these styles for the logout confirmation toast */
+.logout-confirmation-toast {
+  padding: 0.5rem 0;
+}
+
+.logout-confirmation-toast p {
+  margin: 0 0 1rem 0;
+  color: #991b1b;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.toast-actions button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-logout {
+  background-color: #dc2626;
+  color: white;
+}
+
+.confirm-logout:hover {
+  background-color: #b91c1c;
+}
+
+.cancel-logout {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.cancel-logout:hover {
+  background-color: #d1d5db;
+}
+
+/* Custom toast styles */
+.logout-toast {
+  background-color: #fff5f5 !important;
+  border: 1px solid #fecaca !important;
+} 

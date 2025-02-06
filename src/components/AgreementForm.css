@@ -1,0 +1,270 @@
+.agreement-form {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  color: var(--primary);
+  margin-bottom: 2rem;
+  font-weight: 600;
+  font-size: 1.75rem;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 1rem;
+}
+
+/* Form sections */
+.form-section {
+  background-color: #fff5f5;
+  border-radius: 8px;
+  border: 1px solid rgba(128, 0, 32, 0.1);
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+}
+
+.form-section h3 {
+  color: var(--primary);
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-section h3 i {
+  font-size: 1.1rem;
+}
+
+/* Grid layout for form groups */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.form-grid.three-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.form-grid.full-width {
+  grid-template-columns: 1fr;
+}
+
+.form-group {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+/* Labels and inputs */
+label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--gray-dark);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  color: var(--text-dark);
+  background-color: var(--white);
+  box-sizing: border-box;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+  width: 100%;
+  font-family: inherit;
+}
+
+/* Timeline section */
+.timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.date-group {
+  background-color: var(--white);
+  padding: 1.25rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 0, 32, 0.1);
+}
+
+.date-group label {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.date-group input {
+  width: 100%;
+}
+
+/* Submit button */
+.submit-button-container {
+  margin-top: 2rem;
+  text-align: right;
+  padding: 0 1rem;
+}
+
+.submit-button {
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 1rem 2rem;
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.submit-button i {
+  font-size: 1.1rem;
+}
+
+/* Fix for long text in inputs */
+input, select {
+  text-overflow: ellipsis;
+}
+
+/* Fix for date inputs */
+input[type="date"] {
+  min-height: 42px;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .timeline-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .form-grid {
+    gap: 1.5rem;
+  }
+  
+  .timeline-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .agreement-form {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .form-section {
+    padding: 1.25rem;
+  }
+
+  .timeline-grid {
+    gap: 1rem;
+  }
+
+  .date-group {
+    padding: 1rem;
+  }
+
+  .submit-button-container {
+    text-align: center;
+  }
+
+  .submit-button {
+    width: 100%;
+  }
+
+  .datetime-input {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .datetime-input input[type="date"],
+  .datetime-input input[type="time"] {
+    width: 100%;
+  }
+}
+
+.form-section:last-of-type {
+  margin-bottom: 2rem;
+}
+
+.year-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.year-select:hover {
+  border-color: #800000;
+}
+
+.year-select:focus {
+  border-color: #800000;
+  box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.1);
+}
+
+/* Add these styles */
+
+.datetime-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.datetime-input input[type="date"] {
+  flex: 2;
+}
+
+.datetime-input input[type="time"] {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  color: var(--text-dark);
+  background-color: var(--white);
+}
+
+.datetime-input input[type="time"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+} 

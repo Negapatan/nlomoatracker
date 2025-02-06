@@ -1,0 +1,132 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.5) blur(8px);
+  z-index: 0;
+  transform: scale(1.1);
+}
+
+.login-box {
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 40px 50px;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  max-width: 400px;
+  width: 90%;
+  margin: 0 auto;
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -45%);
+  margin-top: 20px;
+}
+
+.login-logo {
+  width: 180px;
+  height: auto;
+  margin-bottom: 24px;
+}
+
+.login-title {
+  color: #800000 !important;
+  margin-bottom: 32px !important;
+  font-weight: 700 !important;
+  font-size: 2rem !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.login-input {
+  margin-bottom: 16px !important;
+}
+
+.login-input .MuiOutlinedInput-root {
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.login-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #800000;
+  border-width: 2px;
+}
+
+.login-input .MuiInputLabel-root.Mui-focused {
+  color: #800000;
+}
+
+.login-button {
+  background-color: #800000 !important;
+  color: #FFD700 !important;
+  padding: 12px 0 !important;
+  font-size: 1.1rem !important;
+  text-transform: uppercase !important;
+  margin-top: 24px !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  letter-spacing: 1px;
+  font-weight: 600 !important;
+}
+
+.login-button:hover {
+  background-color: #600000 !important;
+  box-shadow: 0 4px 12px rgba(128, 0, 0, 0.3) !important;
+}
+
+.login-button:disabled {
+  background-color: #cccccc !important;
+  color: #666666 !important;
+}
+
+@media (max-width: 600px) {
+  .login-box {
+    margin: 20px;
+    padding: 30px;
+  }
+
+  .login-logo {
+    width: 140px;
+  }
+
+  .login-title {
+    font-size: 1.8rem !important;
+  }
+} 

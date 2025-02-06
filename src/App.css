@@ -1,0 +1,176 @@
+/* Add at the top of App.css */
+:root {
+  --primary: #800020;
+  --primary-dark: #600018;
+  --primary-light: #aa1c3f;
+  --accent: #d4af37;
+  --background: #f8f5f5;
+  --text-dark: #2d1c1c;
+  --text-light: #f8f5f5;
+  --gray-dark: #4a3e3e;
+  --gray-light: #8a7b7b;
+  --white: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--text-dark);
+}
+
+.App {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 2rem;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed + .main-content {
+  margin-left: 60px;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Add responsive design for smaller screens */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  
+  .sidebar.collapsed + .main-content {
+    margin-left: 0;
+  }
+  
+  .App {
+    flex-direction: column;
+  }
+}
+
+/* Toast Customization */
+.Toastify__toast {
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.Toastify__toast--success {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.Toastify__toast--error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.Toastify__toast--info {
+  background-color: #fff5f5;
+  color: #800020;
+  border: 1px solid rgba(128, 0, 32, 0.2);
+}
+
+.Toastify__toast-body {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0;
+}
+
+.Toastify__progress-bar {
+  height: 3px;
+}
+
+.Toastify__toast--success .Toastify__progress-bar {
+  background-color: #22c55e;
+}
+
+.Toastify__toast--error .Toastify__progress-bar {
+  background-color: #ef4444;
+}
+
+.Toastify__toast--info .Toastify__progress-bar {
+  background-color: #800020;
+}
+
+.Toastify__close-button {
+  color: currentColor;
+  opacity: 0.7;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #800020;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  color: #666;
+  font-size: 1rem;
+}

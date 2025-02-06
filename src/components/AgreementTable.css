@@ -1,0 +1,627 @@
+.table-container {
+  margin: 0 auto;
+  padding: 0 1rem;
+  max-width: 100%;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.table-header h2 {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+.table-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-box {
+  position: relative;
+  min-width: 300px;
+}
+
+.search-box i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-light);
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: var(--white);
+  transition: all 0.2s;
+}
+
+.search-box input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+}
+
+.filter-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--white);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: var(--gray-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-button:hover {
+  background-color: #f8f9fa;
+}
+
+.table-wrapper {
+  background-color: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1rem;
+}
+
+/* Add a fixed background to prevent content showing through */
+.table-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--white);
+  z-index: -1;
+}
+
+.agreement-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.agreement-table th,
+.agreement-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.agreement-table th {
+  background-color: var(--primary);
+  color: var(--white);
+  font-weight: 500;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.agreement-table tr:hover td {
+  background-color: #fff5f5;
+}
+
+/* Column styles */
+.column-number {
+  width: 50px;
+  text-align: center;
+}
+
+.company-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.company-name {
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.contact-details div {
+  margin-bottom: 0.25rem;
+}
+
+.agreement-type {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #fff5f5;
+  border: 1px solid rgba(128, 0, 32, 0.1);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+.date-info {
+  background-color: #fff5f5;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 0, 32, 0.1);
+  font-size: 0.85rem;
+}
+
+.date-info div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.date-info div:last-child {
+  margin-bottom: 0;
+}
+
+.date-label {
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.date-value {
+  color: var(--primary);
+  text-align: right;
+}
+
+/* Make the date columns wider to accommodate the time */
+.column-date {
+  min-width: 200px;
+}
+
+.column-actions {
+  white-space: nowrap;
+  width: 100px;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  color: var(--gray-dark);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  opacity: 0.7;
+  margin: 0 0.25rem;
+}
+
+.action-button:hover {
+  opacity: 1;
+}
+
+.action-button[title="Edit"]:hover {
+  color: #2563eb;
+}
+
+.action-button[title="Delete"]:hover {
+  color: #dc2626;
+}
+
+.no-records {
+  text-align: center;
+  padding: 3rem;
+  color: var(--gray-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .table-actions {
+    width: 100%;
+  }
+
+  .search-box {
+    flex: 1;
+  }
+
+  .date-info {
+    font-size: 0.8rem;
+  }
+  
+  .column-date {
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    padding: 0 0.5rem;
+  }
+
+  .table-actions {
+    flex-direction: column;
+  }
+
+  .search-box {
+    min-width: 100%;
+  }
+
+  .filter-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .date-info div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .date-value {
+    text-align: left;
+  }
+}
+
+/* Add horizontal scroll indicator */
+.table-wrapper::after {
+  content: 'Scroll horizontally to see more →';
+  display: block;
+  text-align: center;
+  padding: 0.5rem;
+  color: var(--gray-light);
+  font-size: 0.875rem;
+  background-color: #fff5f5;
+  border-top: 1px solid rgba(128, 0, 32, 0.1);
+}
+
+/* Add these new styles */
+.records-info {
+  color: var(--gray-dark);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 0 1rem;
+}
+
+.pagination-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--white);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: var(--gray-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-button:not(:disabled):hover {
+  background-color: #f8f9fa;
+  color: var(--primary);
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.page-number {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: var(--white);
+  color: var(--gray-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-number.active {
+  background-color: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+.page-number:hover:not(.active) {
+  background-color: #f8f9fa;
+  color: var(--primary);
+}
+
+/* Add zebra striping for better row distinction */
+.agreement-table tbody tr:nth-child(even) {
+  background-color: #fff5f5;
+}
+
+.agreement-table tbody tr:hover {
+  background-color: #ffebeb;
+}
+
+/* Improve search box */
+.search-box input {
+  transition: all 0.2s;
+}
+
+.search-box input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+}
+
+/* Filter dropdown styles */
+.filter-container {
+  position: relative;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--white);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: 0.5rem;
+  min-width: 200px;
+}
+
+.filter-option {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: none;
+  background: none;
+  color: var(--gray-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-option:hover {
+  background-color: #f8f9fa;
+  color: var(--primary);
+}
+
+.filter-option.active {
+  background-color: #fff5f5;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* Status indicators */
+.agreement-table tr.completed td {
+  background-color: #f0fdf4;
+}
+
+.agreement-table tr.completed:hover td {
+  background-color: #dcfce7;
+}
+
+/* Improve action buttons */
+.action-button {
+  opacity: 0.7;
+  margin: 0 0.25rem;
+}
+
+.action-button:hover {
+  opacity: 1;
+}
+
+.action-button[title="Edit"]:hover {
+  color: #2563eb;
+}
+
+.action-button[title="Delete"]:hover {
+  color: #dc2626;
+}
+
+/* Toast Styles */
+.delete-confirmation-toast {
+  padding: 0.5rem 0;
+}
+
+.delete-confirmation-toast p {
+  margin: 0 0 1rem 0;
+  color: #991b1b;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.toast-actions button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-delete {
+  background-color: #dc2626;
+  color: white;
+}
+
+.confirm-delete:hover {
+  background-color: #b91c1c;
+}
+
+.cancel-delete {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.cancel-delete:hover {
+  background-color: #d1d5db;
+}
+
+/* Custom toast styles */
+.delete-toast {
+  background-color: #fff5f5 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.edit-toast {
+  background-color: #fff5f5 !important;
+  border: 1px solid rgba(128, 0, 32, 0.2) !important;
+  color: #800020 !important;
+}
+
+.year-filter {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-right: 10px;
+  background-color: white;
+  font-size: 14px;
+  outline: none;
+  width: 120px;
+}
+
+.year-filter::placeholder {
+  color: #666;
+}
+
+.year-filter:hover {
+  border-color: #800000;
+}
+
+.year-filter:focus {
+  border-color: #800000;
+  box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.1);
+}
+
+.filter-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Add these styles at the end of the file */
+
+.statistics-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
+}
+
+.statistic-card {
+  background-color: #fff;
+  border: 1px solid rgba(128, 0, 32, 0.1);
+  border-radius: 10px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.statistic-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statistic-card i {
+  font-size: 2rem;
+  color: #800020;
+  background-color: #fff5f5;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.statistic-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.statistic-value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #800020;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.statistic-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Responsive design for statistics */
+@media (max-width: 768px) {
+  .statistics-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .statistic-card {
+    padding: 1rem;
+  }
+
+  .statistic-card i {
+    font-size: 1.5rem;
+    padding: 0.75rem;
+  }
+
+  .statistic-value {
+    font-size: 1.5rem;
+  }
+
+  .statistic-label {
+    font-size: 0.85rem;
+  }
+}
+
+/* Add this to the existing CSS */
+.export-button {
+  margin-left: auto;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.export-button:hover {
+  background-color: #218838;
+}
+
+.export-button i {
+  font-size: 1rem;
+} 
