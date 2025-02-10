@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import './PrivateRoute.css'; // We'll create this file next
 
 function PrivateRoute({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -13,6 +14,7 @@ function PrivateRoute({ children }) {
       setIsLoading(false);
     });
 
+    // Cleanup subscription
     return () => unsubscribe();
   }, []);
 
@@ -26,7 +28,7 @@ function PrivateRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;

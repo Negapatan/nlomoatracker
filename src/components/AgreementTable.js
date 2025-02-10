@@ -5,7 +5,14 @@ import { toast } from 'react-toastify';
 import { updateMOARecord } from '../utils/firestore';
 import ExportToExcel from './ExportToExcel';
 
-function AgreementTable({ records, onEdit, onDelete }) {
+const LoadingState = () => (
+  <div className="loading-container">
+    <div className="loading-spinner"></div>
+    <p>Loading records...</p>
+  </div>
+);
+
+function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterYear, setFilterYear] = useState('all');
@@ -13,6 +20,32 @@ function AgreementTable({ records, onEdit, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
   const [editingRecord, setEditingRecord] = useState(null);
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  if (hasError) {
+    return (
+      <div className="error-container">
+        <p>Error loading records. Please try refreshing the page.</p>
+        <button 
+          className="refresh-button"
+          onClick={() => window.location.reload()}
+        >
+          Refresh
+        </button>
+      </div>
+    );
+  }
+
+  if (!records || records.length === 0) {
+    return (
+      <div className="no-records-container">
+        <p>No records found. Add a new record using the Agreement Form.</p>
+      </div>
+    );
+  }
 
   // Get unique years from records based on dateProcessedNLO and ensure chronological order
   const years = [...new Set(records?.filter(record => record.dateProcessedNLO)
@@ -130,7 +163,6 @@ function AgreementTable({ records, onEdit, onDelete }) {
   const handleSaveEdit = async (updatedRecord) => {
     try {
       await updateMOARecord(updatedRecord.id, updatedRecord);
-      onEdit(null);
       setEditingRecord(null);
       toast.success('Record updated successfully!');
     } catch (error) {
@@ -317,7 +349,12 @@ function AgreementTable({ records, onEdit, onDelete }) {
                       </div>
                     </div>
                   </td>
-                  <td className="column-remarks">{record.remarks || '-'}</td>
+                  <td 
+                    className="column-remarks remarks-cell" 
+                    data-full-text={record.remarks || '-'}
+                  >
+                    {record.remarks || '-'}
+                  </td>
                   <td className="column-actions">
                     <button 
                       className="action-button" 

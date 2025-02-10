@@ -29,9 +29,8 @@ body {
 
 .main-content {
   flex: 1;
-  margin-left: 250px;
   padding: 2rem;
-  min-height: 100vh;
+  margin-left: 250px; /* Sidebar width */
   transition: margin-left 0.3s ease;
 }
 
@@ -74,19 +73,31 @@ body {
   }
 }
 
-/* Add responsive design for smaller screens */
+/* Tablet view */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 200px;
+    padding: 1.5rem;
+  }
+
+  .sidebar.collapsed + .main-content {
+    margin-left: 60px;
+  }
+}
+
+/* Mobile view */
 @media (max-width: 768px) {
+  .App {
+    flex-direction: column;
+  }
+
   .main-content {
     margin-left: 0;
     padding: 1rem;
   }
-  
+
   .sidebar.collapsed + .main-content {
     margin-left: 0;
-  }
-  
-  .App {
-    flex-direction: column;
   }
 }
 

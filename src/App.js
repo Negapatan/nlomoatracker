@@ -8,9 +8,10 @@ import Sidebar from './components/Sidebar';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import PrivateRoute from './components/PrivateRoute';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from './firebase';
+import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
+import { db, auth } from './firebase';
 import { addMOARecord, updateMOARecord, deleteMOARecord } from './utils/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function App() {
   const [records, setRecords] = useState([]);
@@ -18,84 +19,122 @@ function App() {
   const [editingRecord, setEditingRecord] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [user, setUser] = useState(null);
 
-  // Set up real-time listener for records
+  // Helper function to safely convert Firestore timestamp to Date
+  const convertTimestamp = (timestamp) => {
+    if (!timestamp) return null;
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate();
+    }
+    return timestamp;
+  };
+
+  // Listen for auth state changes
   useEffect(() => {
-    setIsLoading(true);
-    setHasError(false);
-    
-    const q = query(
-      collection(db, 'moa_records'),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const updatedRecords = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          // Convert Firestore Timestamps to JavaScript Dates
-          dateProcessedNLO: doc.data().dateProcessedNLO?.toDate() || null,
-          dateForwardedLCAO: doc.data().dateForwardedLCAO?.toDate() || null,
-          dateReceivedLCAO: doc.data().dateReceivedLCAO?.toDate() || null,
-          dateForwardedAttorneys: doc.data().dateForwardedAttorneys?.toDate() || null,
-          dateReceivedLCAOWithCover: doc.data().dateReceivedLCAOWithCover?.toDate() || null,
-          dateForwardedHost: doc.data().dateForwardedHost?.toDate() || null,
-          dateForwardedNEXUSS: doc.data().dateForwardedNEXUSS?.toDate() || null,
-          dateReceivedNEXUSS: doc.data().dateReceivedNEXUSS?.toDate() || null,
-          dateForwardedEO: doc.data().dateForwardedEO?.toDate() || null,
-          dateReceivedEO: doc.data().dateReceivedEO?.toDate() || null,
-          createdAt: doc.data().createdAt?.toDate() || null,
-          updatedAt: doc.data().updatedAt?.toDate() || null
-        }));
-        setRecords(updatedRecords);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
+        setRecords([]);
         setIsLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching records:", error);
-        toast.error('Error loading records');
-        setIsLoading(false);
-        setHasError(true);
       }
-    );
+    });
 
     return () => unsubscribe();
   }, []);
 
+  // Set up real-time listener for records when user is authenticated
+  useEffect(() => {
+    let unsubscribe = () => {};
+
+    if (user) {
+      setIsLoading(true);
+      setHasError(false);
+      
+      try {
+        const q = query(
+          collection(db, 'moa_records'),
+          orderBy('createdAt', 'desc')
+        );
+
+        unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            try {
+              const recordsData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  ...data,
+                  dateProcessedNLO: convertTimestamp(data.dateProcessedNLO),
+                  dateForwardedLCAO: convertTimestamp(data.dateForwardedLCAO),
+                  dateReceivedLCAO: convertTimestamp(data.dateReceivedLCAO),
+                  dateForwardedAttorneys: convertTimestamp(data.dateForwardedAttorneys),
+                  dateReceivedLCAOWithCover: convertTimestamp(data.dateReceivedLCAOWithCover),
+                  dateForwardedHost: convertTimestamp(data.dateForwardedHost),
+                  dateForwardedNEXUSS: convertTimestamp(data.dateForwardedNEXUSS),
+                  dateReceivedNEXUSS: convertTimestamp(data.dateReceivedNEXUSS),
+                  dateForwardedEO: convertTimestamp(data.dateForwardedEO),
+                  dateReceivedEO: convertTimestamp(data.dateReceivedEO),
+                  createdAt: convertTimestamp(data.createdAt),
+                  updatedAt: convertTimestamp(data.updatedAt)
+                };
+              });
+              setRecords(recordsData);
+              setIsLoading(false);
+            } catch (error) {
+              console.error("Error processing records:", error);
+              setHasError(true);
+              setIsLoading(false);
+              toast.error('Error processing records');
+            }
+          },
+          (error) => {
+            console.error("Error fetching records:", error);
+            toast.error('Error loading records');
+            setHasError(true);
+            setIsLoading(false);
+          }
+        );
+      } catch (error) {
+        console.error("Error setting up listener:", error);
+        setHasError(true);
+        setIsLoading(false);
+        toast.error('Error connecting to database');
+      }
+    }
+
+    return () => unsubscribe();
+  }, [user]); // Only re-run when user auth state changes
+
   const handleFormSubmit = async (formData) => {
     try {
       if (editingRecord) {
-        // Update existing record
         await updateMOARecord(editingRecord.id, formData);
-        setRecords(records.map(record => 
-          record.id === editingRecord.id ? { ...formData, id: editingRecord.id } : record
-        ));
-        setEditingRecord(null);
         toast.success('Record updated successfully!');
+        setEditingRecord(null);
       } else {
-        // Add new record
-        const newRecordId = await addMOARecord(formData);
-        setRecords([{ ...formData, id: newRecordId }, ...records]);
+        await addMOARecord(formData);
         toast.success('New record added successfully!');
       }
     } catch (error) {
+      console.error('Error saving record:', error);
       toast.error('Error saving record');
     }
   };
 
   const handleEdit = (record) => {
-    if (activeTab === 'records') {
-      setEditingRecord(record);
-    }
+    setEditingRecord(record);
+    setActiveTab('form');
   };
 
   const handleDelete = async (recordToDelete) => {
     try {
       await deleteMOARecord(recordToDelete.id);
-      setRecords(records.filter(record => record.id !== recordToDelete.id));
+      toast.success('Record deleted successfully');
     } catch (error) {
       console.error('Error deleting record:', error);
+      toast.error('Error deleting record');
     }
   };
 
@@ -110,29 +149,19 @@ function App() {
               <div className="App">
                 <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
                 <div className="main-content">
-                  {hasError ? (
-                    <div className="error-container">
-                      <p>Error loading records. Please try refreshing the page.</p>
-                      <button onClick={() => window.location.reload()}>Refresh</button>
-                    </div>
-                  ) : isLoading ? (
-                    <div className="loading-container">
-                      <div className="loading-spinner"></div>
-                      <p>Loading records...</p>
-                    </div>
+                  {activeTab === 'form' ? (
+                    <AgreementForm 
+                      onSubmit={handleFormSubmit}
+                      initialData={editingRecord}
+                    />
                   ) : (
-                    activeTab === 'form' ? (
-                      <AgreementForm 
-                        onSubmit={handleFormSubmit}
-                        initialData={editingRecord}
-                      />
-                    ) : (
-                      <AgreementTable 
-                        records={records}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
-                    )
+                    <AgreementTable 
+                      records={records}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      isLoading={isLoading}
+                      hasError={hasError}
+                    />
                   )}
                 </div>
                 <ToastContainer 
