@@ -249,6 +249,38 @@ input[type="date"] {
 
 .datetime-input input[type="date"] {
   flex: 2;
+  min-width: 150px;
+  position: relative;
+  cursor: text;
+}
+
+.datetime-input input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 8px;
+  cursor: pointer;
+}
+
+.datetime-input input[type="date"]::-webkit-inner-spin-button,
+.datetime-input input[type="date"]::-webkit-clear-button {
+  display: none;
+}
+
+/* Add these new styles for better date input interaction */
+.datetime-input input[type="date"]:focus {
+  color: var(--text-dark);
+}
+
+.datetime-input input[type="date"]::placeholder {
+  color: #6b7280;
+}
+
+/* Style for invalid date input */
+.datetime-input input[type="date"]:invalid {
+  border-color: #ef4444;
+}
+
+.datetime-input input[type="date"]:invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 .datetime-input input[type="time"] {
@@ -267,4 +299,24 @@ input[type="date"] {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+}
+
+/* Add this new style for the date input */
+.datetime-input input[type="date"]::-webkit-datetime-edit {
+  padding: 0 0.5rem;
+}
+
+.datetime-input input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+}
+
+/* Customize the display of date parts */
+.datetime-input input[type="date"]::-webkit-datetime-edit-month-field,
+.datetime-input input[type="date"]::-webkit-datetime-edit-day-field,
+.datetime-input input[type="date"]::-webkit-datetime-edit-year-field {
+  padding: 0 2px;
+}
+
+.datetime-input input[type="date"]::-webkit-datetime-edit-text {
+  padding: 0 2px;
 } 
