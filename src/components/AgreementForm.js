@@ -48,64 +48,6 @@ function AgreementForm({ onSubmit, initialData }) {
     }));
   };
 
-  // Update the formatInputDate function
-  const formatInputDate = (value) => {
-    // Allow manual typing with automatic formatting
-    if (value) {
-      // Remove any non-numeric characters
-      const numbers = value.replace(/\D/g, '');
-      
-      if (numbers.length >= 8) {
-        // Format as MM-DD-YYYY
-        const month = numbers.slice(0, 2);
-        const day = numbers.slice(2, 4);
-        const year = numbers.slice(4, 8);
-        
-        // Validate the date
-        const date = new Date(year, month - 1, day);
-        if (date.getFullYear() === Number(year) && 
-            date.getMonth() === Number(month) - 1 && 
-            date.getDate() === Number(day)) {
-          // Return in HTML5 date input format (YYYY-MM-DD)
-          return `${year}-${month}-${day}`;
-        }
-      }
-    }
-    return value;
-  };
-
-  // Update the handleDateTimeChange function
-  const handleDateTimeChange = (e) => {
-    const { name, value } = e.target;
-    const timeValue = e.target.getAttribute('data-time');
-    
-    if (value) {
-      let dateValue = value;
-      
-      // If it's a date input, format the value
-      if (!timeValue) {
-        dateValue = formatInputDate(value);
-      }
-      
-      // Only create DateTime if we have a valid date format
-      if (dateValue && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const dateTime = timeValue ? 
-          new Date(`${dateValue}T${timeValue}`) : 
-          new Date(`${dateValue}T${currentTime}`);
-
-        setFormData(prevState => ({
-          ...prevState,
-          [name]: dateTime.toISOString()
-        }));
-      }
-    } else {
-      setFormData(prevState => ({
-        ...prevState,
-        [name]: ''
-      }));
-    }
-  };
-
   // Update the formatDateForInput function
   const formatDateForInput = (dateString) => {
     if (!dateString) return { date: '', time: '' };
@@ -120,6 +62,28 @@ function AgreementForm({ onSubmit, initialData }) {
       date: `${year}-${month}-${day}`,
       time: date.toTimeString().split(' ')[0]
     };
+  };
+
+  // Simplify the handleDateTimeChange function
+  const handleDateTimeChange = (e) => {
+    const { name, value } = e.target;
+    const timeValue = e.target.getAttribute('data-time');
+    
+    if (value) {
+      const dateTime = timeValue ? 
+        new Date(`${value}T${timeValue}`) : 
+        new Date(`${value}T${currentTime}`);
+
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: dateTime.toISOString()
+      }));
+    } else {
+      setFormData(prevState => ({
+        ...prevState,
+        [name]: ''
+      }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -195,14 +159,6 @@ function AgreementForm({ onSubmit, initialData }) {
                 name="dateProcessedNLO"
                 value={formatDateForInput(formData.dateProcessedNLO).date}
                 onChange={handleDateTimeChange}
-                onKeyDown={(e) => {
-                  // Allow numeric input, backspace, delete, and arrow keys
-                  if (!/[\d\b]/.test(e.key) && 
-                      !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                placeholder="MM-DD-YYYY"
               />
               <input
                 type="time"
