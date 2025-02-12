@@ -125,7 +125,7 @@
 }
 
 .column-type {
-  width: 8%;
+  width: 6%;
 }
 
 .column-date {
@@ -155,8 +155,13 @@
 }
 
 .agreement-type {
-  padding: 0.15rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
+  border-radius: 4px;
+  background-color: #fff5f5;
+  color: var(--primary);
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .date-info {

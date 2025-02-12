@@ -54,7 +54,7 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
 
   // Filter options
   const filterOptions = {
-    all: 'All Agreements',
+    all: 'All Types',
     'OJT MOA': 'OJT MOA',
     'MOU/MOA': 'MOU/MOA'
   };
@@ -266,7 +266,7 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
             <tr>
               <th className="column-number">#</th>
               <th className="column-company">Company Name</th>
-              <th className="column-type">Agreement Type</th>
+              <th className="column-type">Type</th>
               <th className="column-date">NLO Process</th>
               <th className="column-date">LCAO Process</th>
               <th className="column-date">Attorney Process</th>
