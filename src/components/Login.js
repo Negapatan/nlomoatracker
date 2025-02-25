@@ -38,7 +38,7 @@ const Login = () => {
       <Container component="main" maxWidth="xs">
         <Box className="login-box">
           <Typography component="h1" variant="h5" className="login-title">
-            MOA Tracker System
+            MOA MONITORING SYSTEM
           </Typography>
           
           {error && (

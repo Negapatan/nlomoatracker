@@ -84,7 +84,7 @@ function Sidebar({ activeTab, setActiveTab }) {
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        {!isCollapsed && <h2>NLO MOA Tracker</h2>}
+        {!isCollapsed && <h2>NLO MONITORING</h2>}
         {isCollapsed ? (
           <button 
             className="collapse-button"
