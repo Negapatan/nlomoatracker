@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import './AgreementTable.css';
 import EditModal from './EditModal';
 import { toast } from 'react-toastify';
@@ -20,6 +20,83 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
   const [editingRecord, setEditingRecord] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+
+  // Wrap pendingRecords in its own useMemo
+  const pendingRecords = useMemo(() => {
+    return records ? records.filter(record => record.status !== 'Completed') : [];
+  }, [records]);
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(date);
+  };
+
+  // Check if a record is completed
+  const isCompleted = (record) => {
+    return record.dateReceivedEO !== '';
+  };
+
+  // Apply sorting to the data - moved before conditional returns
+  const sortedRecords = useMemo(() => {
+    let sortableItems = [...pendingRecords];
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        if (!a[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (!b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+        
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [pendingRecords, sortConfig]);
+
+  // Filter records based on search, type, and year
+  const filteredRecords = useMemo(() => {
+    return sortedRecords.filter(record => {
+      const matchesSearch = record.companyName.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesYear = filterYear === 'all' || 
+        (record.dateProcessedNLO && 
+         new Date(record.dateProcessedNLO).getFullYear().toString() === filterYear);
+
+      if (filterType === 'all') return matchesSearch && matchesYear;
+      return matchesSearch && record.agreementType === filterType && matchesYear;
+    });
+  }, [sortedRecords, searchTerm, filterType, filterYear]);
+
+  // Pagination calculations
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredRecords.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+
+  // Get unique years from records based on dateProcessedNLO and ensure chronological order
+  const years = useMemo(() => {
+    return [...new Set(records?.filter(record => record.dateProcessedNLO)
+      .map(record => new Date(record.dateProcessedNLO).getFullYear())
+    )].sort((a, b) => b - a);  // Sort years in descending order (newest first)
+  }, [records]);
+
+  // Calculate statistics
+  const totalRecords = pendingRecords?.length || 0;
+  const moaMouCount = pendingRecords?.filter(record => record.agreementType === 'MOU/MOA').length || 0;
+  const ojtMoaCount = pendingRecords?.filter(record => record.agreementType === 'OJT MOA').length || 0;
 
   if (isLoading) {
     return <LoadingState />;
@@ -39,18 +116,13 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
     );
   }
 
-  if (!records || records.length === 0) {
+  if (!pendingRecords || pendingRecords.length === 0) {
     return (
       <div className="no-records-container">
-        <p>No records found. Add a new record using the Agreement Form.</p>
+        <p>No pending records found. Add a new record using the Agreement Form or check the Completed tab.</p>
       </div>
     );
   }
-
-  // Get unique years from records based on dateProcessedNLO and ensure chronological order
-  const years = [...new Set(records?.filter(record => record.dateProcessedNLO)
-    .map(record => new Date(record.dateProcessedNLO).getFullYear())
-  )].sort((a, b) => b - a);  // Sort years in descending order (newest first)
 
   // Filter options
   const filterOptions = {
@@ -58,47 +130,6 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
     'OJT MOA': 'OJT MOA',
     'MOU/MOA': 'MOU/MOA'
   };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(date);
-  };
-
-  // Check if a record is completed
-  const isCompleted = (record) => {
-    return record.dateReceivedEO !== '';
-  };
-
-  // Filter records based on search, type, and year
-  const filteredRecords = records?.filter(record => {
-    const matchesSearch = record.companyName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesYear = filterYear === 'all' || 
-      (record.dateProcessedNLO && 
-       new Date(record.dateProcessedNLO).getFullYear().toString() === filterYear);
-
-    if (filterType === 'all') return matchesSearch && matchesYear;
-    return matchesSearch && record.agreementType === filterType && matchesYear;
-  }) || [];
-
-  // Pagination
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = filteredRecords.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
-
-  // Calculate statistics
-  const totalRecords = records?.length || 0;
-  const moaMouCount = records?.filter(record => record.agreementType === 'MOU/MOA').length || 0;
-  const ojtMoaCount = records?.filter(record => record.agreementType === 'OJT MOA').length || 0;
 
   const handleEdit = (record) => {
     setEditingRecord(record);
@@ -162,9 +193,17 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
 
   const handleSaveEdit = async (updatedRecord) => {
     try {
+      console.log("Saving updated record:", updatedRecord);
+      console.log("Status:", updatedRecord.status);
+      
       await updateMOARecord(updatedRecord.id, updatedRecord);
       setEditingRecord(null);
-      toast.success('Record updated successfully!');
+      
+      if (updatedRecord.status === 'Completed') {
+        toast.success('Record marked as completed and moved to Completed tab!');
+      } else {
+        toast.success('Record updated successfully!');
+      }
     } catch (error) {
       console.error('Error updating record:', error);
       toast.error('Failed to update record');
@@ -179,7 +218,7 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
         <i className="fas fa-file-alt"></i>
         <div className="statistic-info">
           <span className="statistic-value">{totalRecords}</span>
-          <span className="statistic-label">Total Records</span>
+          <span className="statistic-label">Pending Records</span>
         </div>
       </div>
       <div className="statistic-card">
@@ -199,10 +238,25 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
     </div>
   );
 
+  // Get sort direction indicator
+  const getSortDirectionIndicator = (key) => {
+    if (sortConfig.key !== key) return null;
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  };
+
+  // Handle sorting
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
   return (
     <div className="table-container">
       <div className="table-header">
-        <h2>Agreement Records</h2>
+        <h2>Pending Agreements</h2>
         <div className="table-actions">
           <div className="search-box">
             <i className="fas fa-search"></i>
@@ -265,9 +319,15 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
           <thead>
             <tr>
               <th className="column-number">#</th>
-              <th className="column-company">Company Name</th>
-              <th className="column-type">Type</th>
-              <th className="column-date">NLO Process</th>
+              <th className="column-company" onClick={() => requestSort('companyName')}>
+                Company Name {getSortDirectionIndicator('companyName')}
+              </th>
+              <th className="column-type" onClick={() => requestSort('agreementType')}>
+                Type {getSortDirectionIndicator('agreementType')}
+              </th>
+              <th className="column-date" onClick={() => requestSort('dateProcessedNLO')}>
+                NLO Process {getSortDirectionIndicator('dateProcessedNLO')}
+              </th>
               <th className="column-date">LCAO Process</th>
               <th className="column-date">Attorney Process</th>
               <th className="column-date">Host/NEXUSS</th>
@@ -279,8 +339,8 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
           <tbody>
             {currentRecords.length > 0 ? (
               currentRecords.map((record, index) => (
-                <tr key={index} className={isCompleted(record) ? 'completed' : ''}>
-                  <td className="column-number">{index + 1}</td>
+                <tr key={record.id || index} className={isCompleted(record) ? 'completed' : ''}>
+                  <td className="column-number">{indexOfFirstRecord + index + 1}</td>
                   <td className="column-company">
                     <div className="company-info">
                       <span className="company-name">{record.companyName}</span>

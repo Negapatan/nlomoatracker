@@ -1,7 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import './AgreementForm.css';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase'; // Make sure this import path is correct for your project
 
-function AgreementForm({ onSubmit, initialData }) {
+function AgreementForm({ onSubmit, initialData, existingData = [] }) {
+  // State to store fetched data from Firestore
+  const [fetchedData, setFetchedData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch all company names from Firestore directly
+  useEffect(() => {
+    const fetchCompanyNames = async () => {
+      try {
+        setIsLoading(true);
+        const moaCollectionRef = collection(db, 'moa_records');
+        const querySnapshot = await getDocs(moaCollectionRef);
+        
+        const companies = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.companyName) {
+            companies.push({
+              id: doc.id,
+              companyName: data.companyName
+            });
+          }
+        });
+        
+        console.log("Fetched company names directly from Firestore:", companies);
+        setFetchedData(companies);
+      } catch (error) {
+        console.error("Error fetching company names:", error);
+        // Continue without validation if we can't fetch data
+        setIsLoading(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompanyNames();
+  }, []);
+
+  // Debug existingData
+  useEffect(() => {
+    console.log("Existing data received from props:", existingData);
+    console.log("Fetched data from Firestore:", fetchedData);
+  }, [existingData, fetchedData]);
+
   const [formData, setFormData] = useState({
     companyName: '',
     agreementType: '',
@@ -12,11 +57,19 @@ function AgreementForm({ onSubmit, initialData }) {
     dateReceivedLCAOWithCover: '',
     dateForwardedHost: '',
     dateForwardedNEXUSS: '',
-    dateReceivedNEXUSS: '',
+    dateReceivedNEXUSS: '', 
     dateForwardedEO: '',
     dateReceivedEO: '',
     remarks: ''
   });
+
+  // Add validation state
+  const [errors, setErrors] = useState({
+    companyName: ''
+  });
+
+  // Add state to track if form is valid for submission
+  const [isFormValid, setIsFormValid] = useState(true);
 
   // Add new state for timestamps
   const [currentTime, setCurrentTime] = useState('');
@@ -39,6 +92,47 @@ function AgreementForm({ onSubmit, initialData }) {
       setFormData(initialData);
     }
   }, [initialData]);
+
+  // Check for duplicates whenever companyName changes - using our directly fetched data
+  useEffect(() => {
+    if (!formData.companyName || isLoading) return;
+    
+    console.log("Checking for duplicates for:", formData.companyName);
+    
+    // Skip validation if we're editing an existing record with the same name
+    if (initialData && initialData.companyName === formData.companyName) {
+      console.log("Editing existing record, skipping validation");
+      setIsFormValid(true);
+      setErrors(prev => ({...prev, companyName: ''}));
+      return;
+    }
+    
+    // Use our directly fetched data for validation
+    const allCompanies = [...fetchedData];
+    
+    // Check for duplicate - use trim() and case insensitive comparison
+    const isDuplicate = allCompanies.some(item => {
+      if (!item || !item.companyName) return false;
+      const match = item.companyName.toLowerCase().trim() === formData.companyName.toLowerCase().trim();
+      if (match) {
+        console.log("Found duplicate:", item.companyName);
+      }
+      return match;
+    });
+    
+    if (isDuplicate) {
+      console.log("Duplicate detected, setting error");
+      setErrors(prev => ({
+        ...prev, 
+        companyName: 'This company name already exists in the records'
+      }));
+      setIsFormValid(false);
+    } else {
+      console.log("No duplicate found, clearing error");
+      setErrors(prev => ({...prev, companyName: ''}));
+      setIsFormValid(true);
+    }
+  }, [formData.companyName, fetchedData, initialData, isLoading]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,24 +182,91 @@ function AgreementForm({ onSubmit, initialData }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    // Clear form if not editing
-    if (!initialData) {
-      setFormData({
-        companyName: '',
-        agreementType: '',
-        dateProcessedNLO: '',
-        dateForwardedLCAO: '',
-        dateReceivedLCAO: '',
-        dateForwardedAttorneys: '',
-        dateReceivedLCAOWithCover: '',
-        dateForwardedHost: '',
-        dateForwardedNEXUSS: '',
-        dateReceivedNEXUSS: '',
-        dateForwardedEO: '',
-        dateReceivedEO: '',
-        remarks: ''
+    console.log("Form submitted, checking validation...");
+    console.log("Current form data:", formData);
+    console.log("Fetched data for validation:", fetchedData);
+    
+    // Don't submit while still loading data
+    if (isLoading) {
+      alert("Please wait, loading company data...");
+      return false;
+    }
+    
+    // Check for duplicate company name one more time before submission
+    let canSubmit = true;
+    
+    // Skip validation if we're editing an existing record with the same name
+    if (!(initialData && initialData.companyName === formData.companyName)) {
+      // Use our directly fetched data for final validation
+      const allCompanies = [...fetchedData];
+      
+      // Check for duplicate
+      const duplicate = allCompanies.find(item => {
+        if (!item || !item.companyName) return false;
+        const match = item.companyName.toLowerCase() === formData.companyName.toLowerCase();
+        console.log(`Comparing: "${item.companyName.toLowerCase()}" with "${formData.companyName.toLowerCase()}" - Match: ${match}`);
+        return match;
       });
+        
+      if (duplicate) {
+        console.error("Duplicate found:", duplicate);
+        setErrors(prev => ({
+          ...prev, 
+          companyName: 'This company name already exists in the records'
+        }));
+        canSubmit = false;
+        alert("Cannot submit: Company name already exists in the records");
+        return false; // Stop execution here
+      }
+    }
+    
+    // Only submit if validation passes
+    if (canSubmit && isFormValid) {
+      console.log("Form is valid, submitting data");
+      
+      // Add status field if it's not present (required by Firestore rules)
+      const finalData = {
+        ...formData,
+        status: formData.status || 'Pending' // Default status if not provided
+      };
+      
+      // Add any other required fields that might be missing
+      if (!finalData.address) finalData.address = '';
+      if (!finalData.contactPerson) finalData.contactPerson = '';
+      if (!finalData.designation) finalData.designation = '';
+      if (!finalData.emailAddress) finalData.emailAddress = '';
+      if (!finalData.contactNumber) finalData.contactNumber = '';
+      if (!finalData.remarks) finalData.remarks = '';
+      
+      console.log("Submitting final data:", finalData);
+      onSubmit(finalData);
+      
+      // Clear form if not editing
+      if (!initialData) {
+        setFormData({
+          companyName: '',
+          agreementType: '',
+          dateProcessedNLO: '',
+          dateForwardedLCAO: '',
+          dateReceivedLCAO: '',
+          dateForwardedAttorneys: '',
+          dateReceivedLCAOWithCover: '',
+          dateForwardedHost: '',
+          dateForwardedNEXUSS: '',
+          dateReceivedNEXUSS: '',
+          dateForwardedEO: '',
+          dateReceivedEO: '',
+          remarks: ''
+        });
+        // Also clear any errors
+        setErrors({
+          companyName: ''
+        });
+      }
+    } else {
+      console.log("Form validation failed, submission prevented");
+      e.stopPropagation(); // Stop event propagation
+      return false; // Explicitly return false to prevent default form submission
     }
   };
 
@@ -125,8 +286,19 @@ function AgreementForm({ onSubmit, initialData }) {
               name="companyName"
               value={formData.companyName}
               onChange={handleChange}
+              className={errors.companyName ? 'input-error' : ''}
               required
             />
+            {errors.companyName && (
+              <div className="error-message">
+                <i className="fas fa-exclamation-triangle"></i> {errors.companyName}
+              </div>
+            )}
+            {!errors.companyName && formData.companyName && !isLoading && (
+              <div className="success-message">
+                <i className="fas fa-check-circle"></i> Company name is available
+              </div>
+            )}
           </div>
           <div className="form-group">
             <label htmlFor="agreementType">Agreement Type</label>

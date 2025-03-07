@@ -15,7 +15,9 @@ function EditModal({ record, onSave, onClose }) {
     dateReceivedNEXUSS: '',
     dateForwardedEO: '',
     dateReceivedEO: '',
-    remarks: ''
+    remarks: '',
+    status: 'Pending',
+    completedDate: ''
   });
   const [currentTime, setCurrentTime] = useState('');
 
@@ -78,7 +80,14 @@ function EditModal({ record, onSave, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    // Make sure we're sending the status field to the server
+    const finalData = {
+      ...formData,
+      // Ensure status is set (default to 'Pending' if missing)
+      status: formData.status || 'Pending'
+    };
+    console.log("Saving record with status:", finalData.status);
+    onSave(finalData);
   };
 
   // Update the date input fields in the form
@@ -112,7 +121,14 @@ function EditModal({ record, onSave, onClose }) {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h2>Edit Agreement Record</h2>
+          <h2>
+            Edit Agreement Record
+            {formData.status === 'Completed' && (
+              <span className="completed-badge">
+                <i className="fas fa-check-circle"></i> Completed
+              </span>
+            )}
+          </h2>
           <button className="close-button" onClick={onClose}>
             <i className="fas fa-times"></i>
           </button>
@@ -192,6 +208,42 @@ function EditModal({ record, onSave, onClose }) {
                 onChange={handleChange}
                 placeholder="Add any additional notes or remarks here..."
               />
+            </div>
+          </div>
+          
+          {/* Simplified Completion Toggle Section */}
+          <div className="form-section finish-section">
+            <h3>Process Completion</h3>
+            <div className="finish-moa-container">
+              <div className="completion-toggle">
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.status === 'Completed'}
+                    onChange={(e) => {
+                      const isCompleted = e.target.checked;
+                      console.log("Setting status to:", isCompleted ? 'Completed' : 'Pending');
+                      setFormData({
+                        ...formData,
+                        status: isCompleted ? 'Completed' : 'Pending',
+                        completedDate: isCompleted ? new Date().toISOString() : ''
+                      });
+                    }}
+                  />
+                  <span className="toggle-switch"></span>
+                  <span className="toggle-text">
+                    {formData.status === 'Completed' ? 'Completed' : 'Mark as Completed'}
+                  </span>
+                </label>
+              </div>
+              
+              <p className="completion-description">
+                Current status: <strong>{formData.status || 'Pending'}</strong>
+                <br />
+                {formData.status === 'Completed' 
+                  ? 'This MOA has been marked as completed and will appear in the Completed Agreements section.'
+                  : 'Toggle this switch when all steps of the MOA process are finished.'}
+              </p>
             </div>
           </div>
 

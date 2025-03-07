@@ -12,6 +12,7 @@ import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/fire
 import { db, auth } from './firebase';
 import { addMOARecord, updateMOARecord, deleteMOARecord } from './utils/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import FinishedAgreement from './components/FinishedAgreement';
 
 function App() {
   const [records, setRecords] = useState([]);
@@ -138,6 +139,34 @@ function App() {
     }
   };
 
+  // Render the appropriate component based on the active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'form':
+        return <AgreementForm 
+          onSubmit={handleFormSubmit} 
+          initialData={editingRecord} 
+          existingData={records} 
+        />;
+      case 'records':
+        return <AgreementTable 
+          records={records} 
+          onEdit={handleEdit} 
+          onDelete={handleDelete} 
+          isLoading={isLoading}
+          hasError={hasError}
+        />;
+      case 'completed':
+        return <FinishedAgreement />;
+      default:
+        return <AgreementForm 
+          onSubmit={handleFormSubmit} 
+          initialData={editingRecord} 
+          existingData={records} 
+        />;
+    }
+  };
+
   return (
     <Router>
       <Routes>
@@ -149,20 +178,7 @@ function App() {
               <div className="App">
                 <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
                 <div className="main-content">
-                  {activeTab === 'form' ? (
-                    <AgreementForm 
-                      onSubmit={handleFormSubmit}
-                      initialData={editingRecord}
-                    />
-                  ) : (
-                    <AgreementTable 
-                      records={records}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      isLoading={isLoading}
-                      hasError={hasError}
-                    />
-                  )}
+                  {renderContent()}
                 </div>
                 <ToastContainer 
                   position="top-right"

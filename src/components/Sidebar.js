@@ -60,6 +60,11 @@ function Sidebar({ activeTab, setActiveTab }) {
       id: 'records',
       label: 'Records',
       icon: 'fas fa-table'
+    },
+    {
+      id: 'completed',
+      label: 'Completed',
+      icon: 'fas fa-check-circle'
     }
   ];
 

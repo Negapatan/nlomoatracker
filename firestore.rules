@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /moa_records/{documentId} {
+      // Basic read permission - allow authenticated users to read all records
+      allow read: if request.auth != null;
+      
+      // Allow create if authenticated and the record is valid
+      allow create: if request.auth != null && isValidMOARecord();
+      
+      // Allow update if authenticated and the record is valid
+      allow update: if request.auth != null && isValidMOARecordUpdate();
+      
+      // Allow delete if authenticated
+      allow delete: if request.auth != null;
+      
+      // Validate the MOA record structure for new records
+      function isValidMOARecord() {
+        let data = request.resource.data;
+        
+        // Validate status field - must be either 'Pending' or 'Completed'
+        let validStatus = data.status is string && 
+                         (data.status == 'Pending' || data.status == 'Completed');
+        
+        // If status is 'Completed', completedDate should exist
+        let validCompletionData = data.status == 'Completed' ? 
+                                 (data.completedDate is string || !('completedDate' in data)) : 
+                                 true;
+        
+        return 
+          data.companyName is string &&
+          data.agreementType is string &&
+          validStatus &&
+          validCompletionData &&
+          (data.address is string || !("address" in data)) &&
+          (data.contactPerson is string || !("contactPerson" in data)) &&
+          (data.designation is string || !("designation" in data)) &&
+          (data.emailAddress is string || !("emailAddress" in data)) &&
+          (data.contactNumber is string || !("contactNumber" in data)) &&
+          (data.remarks is string || !("remarks" in data));
+      }
+      
+      // Validate updates to MOA records, with special handling for status changes
+      function isValidMOARecordUpdate() {
+        let data = request.resource.data;
+        let oldData = resource.data;
+        
+        // Validate basic fields
+        let validBasicFields = 
+          data.companyName is string &&
+          data.agreementType is string &&
+          (data.address is string || !("address" in data)) &&
+          (data.contactPerson is string || !("contactPerson" in data)) &&
+          (data.designation is string || !("designation" in data)) &&
+          (data.emailAddress is string || !("emailAddress" in data)) &&
+          (data.contactNumber is string || !("contactNumber" in data)) &&
+          (data.remarks is string || !("remarks" in data));
+        
+        // Validate status field - must be either 'Pending' or 'Completed'
+        let validStatus = data.status is string && 
+                         (data.status == 'Pending' || data.status == 'Completed');
+        
+        // Allow changing from Completed to Pending with null completedDate
+        let allowPendingChange = oldData.status == 'Completed' && data.status == 'Pending' && 
+                               (!('completedDate' in data) || data.completedDate == null);
+        
+        // Require completedDate when status is Completed
+        let requireCompletedDate = data.status == 'Completed' && data.completedDate is string;
+        
+        // Allow status to be Pending without completedDate
+        let allowPendingStatus = data.status == 'Pending' && 
+                               (!('completedDate' in data) || data.completedDate == null);
+        
+        // Final validation combines all conditions
+        return validBasicFields && validStatus && 
+              (allowPendingChange || requireCompletedDate || allowPendingStatus);
+      }
+      
+      // Note: We're relying on client-side validation for duplicate checking
+      // because Firestore Rules have limitations with querying for duplicates
+      // in a secure way across all documents.
+    }
+  }
+} 

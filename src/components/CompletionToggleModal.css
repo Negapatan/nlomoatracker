@@ -1,0 +1,222 @@
+.completion-toggle-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.completion-toggle-modal {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: completion-toggle-fadeIn 0.3s ease-out;
+}
+
+@keyframes completion-toggle-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.completion-toggle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.completion-toggle-header h2 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.completion-toggle-close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.completion-toggle-close-button:hover {
+  color: #111827;
+}
+
+.completion-toggle-body {
+  padding: 1.5rem;
+}
+
+.completion-toggle-company-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: #111827;
+}
+
+.completion-toggle-agreement-type {
+  font-size: 1rem;
+  color: #4b5563;
+  margin: 0 0 1.5rem 0;
+}
+
+.completion-toggle-status-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+}
+
+.completion-toggle-status-completed {
+  font-weight: 600;
+  color: #059669;
+  background-color: #d1fae5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+
+.completion-toggle-status-pending {
+  font-weight: 600;
+  color: #d97706;
+  background-color: #fef3c7;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+
+.completion-toggle-confirmation-text {
+  margin-top: 1rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.completion-toggle-container {
+  display: flex;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.completion-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.completion-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.completion-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.completion-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .completion-toggle-slider {
+  background-color: #059669;
+}
+
+input:focus + .completion-toggle-slider {
+  box-shadow: 0 0 1px #059669;
+}
+
+input:checked + .completion-toggle-slider:before {
+  transform: translateX(26px);
+}
+
+.completion-toggle-label {
+  margin-left: 1rem;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+input:checked ~ .completion-toggle-label {
+  color: #059669;
+}
+
+input:not(:checked) ~ .completion-toggle-label {
+  color: #d97706;
+}
+
+.completion-toggle-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.completion-toggle-cancel-button {
+  padding: 0.6rem 1.2rem;
+  background-color: white;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.completion-toggle-cancel-button:hover {
+  background-color: #f3f4f6;
+}
+
+.completion-toggle-confirm-button {
+  padding: 0.6rem 1.2rem;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.completion-toggle-confirm-button:hover {
+  filter: brightness(90%);
+}
+
+.completion-toggle-cancel-button:disabled,
+.completion-toggle-confirm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+} 
