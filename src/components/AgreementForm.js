@@ -476,7 +476,7 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
           </div>
           
           <div className="date-group">
-            <label htmlFor="dateForwardedNEXUSS">Date Forwarded to NEXUSS Director</label>
+            <label htmlFor="dateForwardedNEXUSS">Date Forwarded to Director External Affairs & MIS</label>
             <div className="datetime-input">
               <input
                 type="date"
@@ -501,7 +501,7 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
           </div>
           
           <div className="date-group">
-            <label htmlFor="dateReceivedNEXUSS">Date Received from NEXUSS Director</label>
+            <label htmlFor="dateReceivedNEXUSS">Date Received from Director External Affairs & MIS</label>
             <div className="datetime-input">
               <input
                 type="date"

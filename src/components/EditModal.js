@@ -182,11 +182,11 @@ function EditModal({ record, onSave, onClose }) {
           </div>
 
           <div className="form-section">
-            <h3>Host & NEXUSS Process</h3>
+            <h3>Host & NEXUSS_NLO Process</h3>
             <div className="form-grid">
               {renderDateTimeInput('dateForwardedHost', 'To Host')}
-              {renderDateTimeInput('dateForwardedNEXUSS', 'To NEXUSS')}
-              {renderDateTimeInput('dateReceivedNEXUSS', 'From NEXUSS')}
+              {renderDateTimeInput('dateForwardedNEXUSS', 'To Director External Affairs & MIS')}
+              {renderDateTimeInput('dateReceivedNEXUSS', 'From Director External Affairs & MIS')}
             </div>
           </div>
 
