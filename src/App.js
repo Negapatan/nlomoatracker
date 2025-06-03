@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
@@ -13,6 +13,8 @@ import { db, auth } from './firebase';
 import { addMOARecord, updateMOARecord, deleteMOARecord } from './utils/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import FinishedAgreement from './components/FinishedAgreement';
+import DuplicateEntries from './components/DuplicateEntries';
+import DuplicateNotification from './components/DuplicateNotification';
 
 function App() {
   const [records, setRecords] = useState([]);
@@ -139,6 +141,27 @@ function App() {
     }
   };
 
+  // Calculate duplicate count
+  const duplicateCount = useMemo(() => {
+    if (!records) return 0;
+    
+    const seen = new Map();
+    let duplicates = 0;
+
+    records.forEach(record => {
+      const key = record.companyName?.toLowerCase().trim();
+      if (!key) return;
+      
+      if (seen.has(key)) {
+        duplicates++;
+      } else {
+        seen.set(key, record);
+      }
+    });
+
+    return duplicates;
+  }, [records]);
+
   // Render the appropriate component based on the active tab
   const renderContent = () => {
     switch (activeTab) {
@@ -158,6 +181,8 @@ function App() {
         />;
       case 'completed':
         return <FinishedAgreement />;
+      case 'duplicates':
+        return <DuplicateEntries records={records} />;
       default:
         return <AgreementForm 
           onSubmit={handleFormSubmit} 
@@ -192,6 +217,7 @@ function App() {
                   pauseOnHover
                   theme="light"
                 />
+                <DuplicateNotification count={duplicateCount} />
               </div>
             </PrivateRoute>
           }

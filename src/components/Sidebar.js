@@ -65,6 +65,11 @@ function Sidebar({ activeTab, setActiveTab }) {
       id: 'completed',
       label: 'Completed',
       icon: 'fas fa-check-circle'
+    },
+    {
+      id: 'duplicates',
+      label: 'Duplicate Entries',
+      icon: 'fas fa-copy'
     }
   ];
 
@@ -117,6 +122,7 @@ function Sidebar({ activeTab, setActiveTab }) {
               className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
               onClick={() => setActiveTab(item.id)}
               title={isCollapsed ? item.label : undefined}
+              data-tab={item.id}
             >
               <div className="nav-item-content">
                 <i className={item.icon}></i>

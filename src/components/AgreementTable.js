@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './AgreementTable.css';
 import EditModal from './EditModal';
 import { toast } from 'react-toastify';
@@ -14,6 +14,7 @@ const LoadingState = () => (
 
 function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterYear, setFilterYear] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -21,6 +22,15 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
   const recordsPerPage = 10;
   const [editingRecord, setEditingRecord] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Wrap pendingRecords in its own useMemo
   const pendingRecords = useMemo(() => {
@@ -46,39 +56,108 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
     return record.dateReceivedEO !== '';
   };
 
-  // Apply sorting to the data - moved before conditional returns
-  const sortedRecords = useMemo(() => {
-    let sortableItems = [...pendingRecords];
+  // Optimize search, filter, and sort logic
+  const filteredRecords = useMemo(() => {
+    if (!pendingRecords) return [];
+    
+    const searchTermLower = debouncedSearchTerm.toLowerCase().trim();
+    if (!searchTermLower) {
+      // If no search term, only apply filters and sorting
+      let filtered = pendingRecords;
+      
+      // Apply year filter
+      if (filterYear !== 'all') {
+        filtered = filtered.filter(record => 
+          record.dateProcessedNLO && 
+          new Date(record.dateProcessedNLO).getFullYear().toString() === filterYear
+        );
+      }
+      
+      // Apply type filter
+      if (filterType !== 'all') {
+        filtered = filtered.filter(record => record.agreementType === filterType);
+      }
+      
+      // Apply sorting
+      if (sortConfig.key) {
+        filtered.sort((a, b) => {
+          const aValue = a[sortConfig.key];
+          const bValue = b[sortConfig.key];
+          
+          if (!aValue && !bValue) return 0;
+          if (!aValue) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (!bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+          
+          const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+          return sortConfig.direction === 'asc' ? comparison : -comparison;
+        });
+      }
+      
+      return filtered;
+    }
+    
+    // Search fields with their weights (higher weight = more important)
+    const searchFields = [
+      { field: 'companyName', weight: 3 },
+      { field: 'agreementType', weight: 2 },
+      { field: 'remarks', weight: 1 },
+      { field: 'hostName', weight: 1 },
+      { field: 'hostEmail', weight: 1 },
+      { field: 'hostContact', weight: 1 }
+    ];
+    
+    // Score each record based on search term matches
+    const scoredRecords = pendingRecords.map(record => {
+      let score = 0;
+      let hasMatch = false;
+      
+      searchFields.forEach(({ field, weight }) => {
+        const value = record[field]?.toLowerCase() || '';
+        if (value.includes(searchTermLower)) {
+          score += weight;
+          hasMatch = true;
+        }
+      });
+      
+      return { record, score, hasMatch };
+    });
+    
+    // Filter and sort by score
+    let filtered = scoredRecords
+      .filter(({ hasMatch }) => hasMatch)
+      .sort((a, b) => b.score - a.score)
+      .map(({ record }) => record);
+    
+    // Apply year filter
+    if (filterYear !== 'all') {
+      filtered = filtered.filter(record => 
+        record.dateProcessedNLO && 
+        new Date(record.dateProcessedNLO).getFullYear().toString() === filterYear
+      );
+    }
+    
+    // Apply type filter
+    if (filterType !== 'all') {
+      filtered = filtered.filter(record => record.agreementType === filterType);
+    }
+    
+    // Apply sorting
     if (sortConfig.key) {
-      sortableItems.sort((a, b) => {
-        if (!a[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (!b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
         
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
+        if (!aValue && !bValue) return 0;
+        if (!aValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (!bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        
+        const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
       });
     }
-    return sortableItems;
-  }, [pendingRecords, sortConfig]);
-
-  // Filter records based on search, type, and year
-  const filteredRecords = useMemo(() => {
-    return sortedRecords.filter(record => {
-      const matchesSearch = record.companyName.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesYear = filterYear === 'all' || 
-        (record.dateProcessedNLO && 
-         new Date(record.dateProcessedNLO).getFullYear().toString() === filterYear);
-
-      if (filterType === 'all') return matchesSearch && matchesYear;
-      return matchesSearch && record.agreementType === filterType && matchesYear;
-    });
-  }, [sortedRecords, searchTerm, filterType, filterYear]);
+    
+    return filtered;
+  }, [pendingRecords, debouncedSearchTerm, filterType, filterYear, sortConfig]);
 
   // Pagination calculations
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -262,7 +341,7 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
             <i className="fas fa-search"></i>
             <input 
               type="text" 
-              placeholder="Search by company name..." 
+              placeholder="Search by company name, type, or remarks..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import './AgreementForm.css';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase'; // Make sure this import path is correct for your project
+import { toast } from 'react-hot-toast';
 
 function AgreementForm({ onSubmit, initialData, existingData = [] }) {
   // State to store fetched data from Firestore
   const [fetchedData, setFetchedData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateRecord, setDuplicateRecord] = useState(null);
 
   // Fetch all company names from Firestore directly
   useEffect(() => {
@@ -47,7 +50,7 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
     console.log("Fetched data from Firestore:", fetchedData);
   }, [existingData, fetchedData]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(initialData || {
     companyName: '',
     agreementType: '',
     dateProcessedNLO: '',
@@ -57,19 +60,18 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
     dateReceivedLCAOWithCover: '',
     dateForwardedHost: '',
     dateForwardedNEXUSS: '',
-    dateReceivedNEXUSS: '', 
+    dateReceivedNEXUSS: '',
     dateForwardedEO: '',
     dateReceivedEO: '',
-    remarks: ''
+    remarks: '',
+    status: 'Pending'
   });
 
   // Add validation state
-  const [errors, setErrors] = useState({
-    companyName: ''
-  });
+  const [errors, setErrors] = useState({});
 
   // Add state to track if form is valid for submission
-  const [isFormValid, setIsFormValid] = useState(true);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   // Add new state for timestamps
   const [currentTime, setCurrentTime] = useState('');
@@ -93,46 +95,109 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
     }
   }, [initialData]);
 
-  // Check for duplicates whenever companyName changes - using our directly fetched data
+  // Check for duplicates whenever companyName changes
   useEffect(() => {
     if (!formData.companyName || isLoading) return;
     
-    console.log("Checking for duplicates for:", formData.companyName);
-    
     // Skip validation if we're editing an existing record with the same name
     if (initialData && initialData.companyName === formData.companyName) {
-      console.log("Editing existing record, skipping validation");
       setIsFormValid(true);
       setErrors(prev => ({...prev, companyName: ''}));
       return;
     }
     
-    // Use our directly fetched data for validation
     const allCompanies = [...fetchedData];
+    const searchTerm = formData.companyName.toLowerCase().trim();
     
-    // Check for duplicate - use trim() and case insensitive comparison
-    const isDuplicate = allCompanies.some(item => {
+    // Find potential duplicates with fuzzy matching
+    const potentialDuplicates = allCompanies.filter(item => {
       if (!item || !item.companyName) return false;
-      const match = item.companyName.toLowerCase().trim() === formData.companyName.toLowerCase().trim();
-      if (match) {
-        console.log("Found duplicate:", item.companyName);
-      }
-      return match;
+      const itemName = item.companyName.toLowerCase().trim();
+      
+      // Check for exact match
+      if (itemName === searchTerm) return true;
+      
+      // Check for similar names (fuzzy matching)
+      const similarity = calculateSimilarity(itemName, searchTerm);
+      return similarity > 0.8; // 80% similarity threshold
     });
     
-    if (isDuplicate) {
-      console.log("Duplicate detected, setting error");
+    if (potentialDuplicates.length > 0) {
+      setDuplicateRecord(potentialDuplicates[0]);
+      setShowDuplicateModal(true);
       setErrors(prev => ({
         ...prev, 
-        companyName: 'This company name already exists in the records'
+        companyName: 'Similar company name found'
       }));
       setIsFormValid(false);
     } else {
-      console.log("No duplicate found, clearing error");
       setErrors(prev => ({...prev, companyName: ''}));
       setIsFormValid(true);
     }
   }, [formData.companyName, fetchedData, initialData, isLoading]);
+
+  // Calculate string similarity (Levenshtein distance)
+  const calculateSimilarity = (str1, str2) => {
+    const track = Array(str2.length + 1).fill(null).map(() =>
+      Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i += 1) {
+      track[0][i] = i;
+    }
+    for (let j = 0; j <= str2.length; j += 1) {
+      track[j][0] = j;
+    }
+
+    for (let j = 1; j <= str2.length; j += 1) {
+      for (let i = 1; i <= str1.length; i += 1) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        track[j][i] = Math.min(
+          track[j][i - 1] + 1,
+          track[j - 1][i] + 1,
+          track[j - 1][i - 1] + indicator
+        );
+      }
+    }
+
+    const maxLength = Math.max(str1.length, str2.length);
+    return 1 - (track[str2.length][str1.length] / maxLength);
+  };
+
+  // Duplicate confirmation modal
+  const DuplicateModal = ({ isOpen, onClose, onConfirm, duplicateRecord }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="modal-overlay">
+        <div className="duplicate-modal">
+          <h3>Potential Duplicate Entry</h3>
+          <p>We found a similar company name in our records:</p>
+          <div className="duplicate-details">
+            <p><strong>Company Name:</strong> {duplicateRecord?.companyName}</p>
+            <p><strong>Agreement Type:</strong> {duplicateRecord?.agreementType}</p>
+            <p><strong>Status:</strong> {duplicateRecord?.status}</p>
+          </div>
+          <div className="modal-actions">
+            <button 
+              className="confirm-button"
+              onClick={() => {
+                onConfirm();
+                onClose();
+              }}
+            >
+              Continue Anyway
+            </button>
+            <button 
+              className="cancel-button"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -182,426 +247,364 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted, checking validation...");
-    console.log("Current form data:", formData);
-    console.log("Fetched data for validation:", fetchedData);
     
-    // Don't submit while still loading data
     if (isLoading) {
-      alert("Please wait, loading company data...");
+      toast.warning("Please wait, loading company data...");
       return false;
     }
     
-    // Check for duplicate company name one more time before submission
-    let canSubmit = true;
-    
-    // Skip validation if we're editing an existing record with the same name
-    if (!(initialData && initialData.companyName === formData.companyName)) {
-      // Use our directly fetched data for final validation
-      const allCompanies = [...fetchedData];
-      
-      // Check for duplicate
-      const duplicate = allCompanies.find(item => {
-        if (!item || !item.companyName) return false;
-        const match = item.companyName.toLowerCase() === formData.companyName.toLowerCase();
-        console.log(`Comparing: "${item.companyName.toLowerCase()}" with "${formData.companyName.toLowerCase()}" - Match: ${match}`);
-        return match;
-      });
-        
-      if (duplicate) {
-        console.error("Duplicate found:", duplicate);
-        setErrors(prev => ({
-          ...prev, 
-          companyName: 'This company name already exists in the records'
-        }));
-        canSubmit = false;
-        alert("Cannot submit: Company name already exists in the records");
-        return false; // Stop execution here
-      }
+    if (!isFormValid) {
+      toast.error("Please fix the errors before submitting");
+      return false;
     }
-    
-    // Only submit if validation passes
-    if (canSubmit && isFormValid) {
-      console.log("Form is valid, submitting data");
-      
-      // Add status field if it's not present (required by Firestore rules)
-      const finalData = {
-        ...formData,
-        status: formData.status || 'Pending' // Default status if not provided
-      };
-      
-      // Add any other required fields that might be missing
-      if (!finalData.address) finalData.address = '';
-      if (!finalData.contactPerson) finalData.contactPerson = '';
-      if (!finalData.designation) finalData.designation = '';
-      if (!finalData.emailAddress) finalData.emailAddress = '';
-      if (!finalData.contactNumber) finalData.contactNumber = '';
-      if (!finalData.remarks) finalData.remarks = '';
-      
-      console.log("Submitting final data:", finalData);
-      onSubmit(finalData);
-      
-      // Clear form if not editing
-      if (!initialData) {
-        setFormData({
-          companyName: '',
-          agreementType: '',
-          dateProcessedNLO: '',
-          dateForwardedLCAO: '',
-          dateReceivedLCAO: '',
-          dateForwardedAttorneys: '',
-          dateReceivedLCAOWithCover: '',
-          dateForwardedHost: '',
-          dateForwardedNEXUSS: '',
-          dateReceivedNEXUSS: '',
-          dateForwardedEO: '',
-          dateReceivedEO: '',
-          remarks: ''
-        });
-        // Also clear any errors
-        setErrors({
-          companyName: ''
-        });
-      }
-    } else {
-      console.log("Form validation failed, submission prevented");
-      e.stopPropagation(); // Stop event propagation
-      return false; // Explicitly return false to prevent default form submission
-    }
+
+    onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="agreement-form">
-      <h2>Agreement Tracking Form</h2>
-      
-      {/* Company Information Section - Simplified */}
-      <div className="form-section">
-        <h3><i className="fas fa-building"></i> Basic Information</h3>
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="companyName">Company Name</label>
-            <input
-              type="text"
-              id="companyName"
-              name="companyName"
-              value={formData.companyName}
-              onChange={handleChange}
-              className={errors.companyName ? 'input-error' : ''}
-              required
-            />
-            {errors.companyName && (
-              <div className="error-message">
-                <i className="fas fa-exclamation-triangle"></i> {errors.companyName}
+    <div className="agreement-form-container">
+      <form onSubmit={handleSubmit} className="agreement-form">
+        <h2>Agreement Tracking Form</h2>
+        
+        {/* Company Information Section - Simplified */}
+        <div className="form-section">
+          <h3><i className="fas fa-building"></i> Basic Information</h3>
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="companyName">Company Name</label>
+              <input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                className={errors.companyName ? 'input-error' : ''}
+                required
+              />
+              {errors.companyName && (
+                <div className="error-message">
+                  <i className="fas fa-exclamation-triangle"></i> {errors.companyName}
+                </div>
+              )}
+              {!errors.companyName && formData.companyName && !isLoading && (
+                <div className="success-message">
+                  <i className="fas fa-check-circle"></i> Company name is available
+                </div>
+              )}
+            </div>
+            <div className="form-group">
+              <label htmlFor="agreementType">Agreement Type</label>
+              <select
+                id="agreementType"
+                name="agreementType"
+                value={formData.agreementType}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Type</option>
+                <option value="OJT MOA">OJT MOA</option>
+                <option value="MOU/MOA">MOU/MOA</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Processing Timeline Section */}
+        <div className="form-section">
+          <h3><i className="fas fa-clock"></i> Processing Timeline</h3>
+          <div className="timeline-grid">
+            {/* NLO Process */}
+            <div className="date-group">
+              <label htmlFor="dateProcessedNLO">Date Processed by NLO</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateProcessedNLO"
+                  name="dateProcessedNLO"
+                  value={formatDateForInput(formData.dateProcessedNLO).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateProcessedNLO).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateProcessedNLO',
+                      value: formatDateForInput(formData.dateProcessedNLO).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
               </div>
-            )}
-            {!errors.companyName && formData.companyName && !isLoading && (
-              <div className="success-message">
-                <i className="fas fa-check-circle"></i> Company name is available
+            </div>
+            
+            {/* LCAO Process */}
+            <div className="date-group">
+              <label htmlFor="dateForwardedLCAO">Date Forwarded to LCAO (via Email)</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateForwardedLCAO"
+                  name="dateForwardedLCAO"
+                  value={formatDateForInput(formData.dateForwardedLCAO).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateForwardedLCAO).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateForwardedLCAO',
+                      value: formatDateForInput(formData.dateForwardedLCAO).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
               </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label htmlFor="agreementType">Agreement Type</label>
-            <select
-              id="agreementType"
-              name="agreementType"
-              value={formData.agreementType}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select Type</option>
-              <option value="OJT MOA">OJT MOA</option>
-              <option value="MOU/MOA">MOU/MOA</option>
-            </select>
+            </div>
+            
+            <div className="date-group">
+              <label htmlFor="dateReceivedLCAO">Date Received from LCAO (via Email)</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateReceivedLCAO"
+                  name="dateReceivedLCAO"
+                  value={formatDateForInput(formData.dateReceivedLCAO).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateReceivedLCAO).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateReceivedLCAO',
+                      value: formatDateForInput(formData.dateReceivedLCAO).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
+            
+            {/* Attorney Process */}
+            <div className="date-group">
+              <label htmlFor="dateForwardedAttorneys">Date Forwarded to Attorneys (printed)</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateForwardedAttorneys"
+                  name="dateForwardedAttorneys"
+                  value={formatDateForInput(formData.dateForwardedAttorneys).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateForwardedAttorneys).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateForwardedAttorneys',
+                      value: formatDateForInput(formData.dateForwardedAttorneys).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
+            
+            <div className="date-group">
+              <label htmlFor="dateReceivedLCAOWithCover">Date Received from LCAO with Cover Page</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateReceivedLCAOWithCover"
+                  name="dateReceivedLCAOWithCover"
+                  value={formatDateForInput(formData.dateReceivedLCAOWithCover).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateReceivedLCAOWithCover).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateReceivedLCAOWithCover',
+                      value: formatDateForInput(formData.dateReceivedLCAOWithCover).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
+            
+            {/* Host/NEXUSS Process */}
+            <div className="date-group">
+              <label htmlFor="dateForwardedHost">Date Forwarded to Host Office/Dept/HTE</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateForwardedHost"
+                  name="dateForwardedHost"
+                  value={formatDateForInput(formData.dateForwardedHost).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateForwardedHost).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateForwardedHost',
+                      value: formatDateForInput(formData.dateForwardedHost).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
+            
+            <div className="date-group">
+              <label htmlFor="dateForwardedNEXUSS">Date Forwarded to Director External Affairs & MIS</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateForwardedNEXUSS"
+                  name="dateForwardedNEXUSS"
+                  value={formatDateForInput(formData.dateForwardedNEXUSS).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateForwardedNEXUSS).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateForwardedNEXUSS',
+                      value: formatDateForInput(formData.dateForwardedNEXUSS).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
+            
+            <div className="date-group">
+              <label htmlFor="dateReceivedNEXUSS">Date Received from Director External Affairs & MIS</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateReceivedNEXUSS"
+                  name="dateReceivedNEXUSS"
+                  value={formatDateForInput(formData.dateReceivedNEXUSS).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateReceivedNEXUSS).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateReceivedNEXUSS',
+                      value: formatDateForInput(formData.dateReceivedNEXUSS).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
+            
+            {/* Executive Office Process */}
+            <div className="date-group">
+              <label htmlFor="dateForwardedEO">Date Forwarded to E.O (VP Signature)</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateForwardedEO"
+                  name="dateForwardedEO"
+                  value={formatDateForInput(formData.dateForwardedEO).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateForwardedEO).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateForwardedEO',
+                      value: formatDateForInput(formData.dateForwardedEO).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
+            
+            <div className="date-group">
+              <label htmlFor="dateReceivedEO">Date Received from E.O (Signed)</label>
+              <div className="datetime-input">
+                <input
+                  type="date"
+                  id="dateReceivedEO"
+                  name="dateReceivedEO"
+                  value={formatDateForInput(formData.dateReceivedEO).date}
+                  onChange={handleDateTimeChange}
+                />
+                <input
+                  type="time"
+                  data-time
+                  value={formatDateForInput(formData.dateReceivedEO).time || currentTime}
+                  onChange={(e) => handleDateTimeChange({
+                    target: {
+                      name: 'dateReceivedEO',
+                      value: formatDateForInput(formData.dateReceivedEO).date,
+                      getAttribute: () => e.target.value
+                    }
+                  })}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Processing Timeline Section */}
-      <div className="form-section">
-        <h3><i className="fas fa-clock"></i> Processing Timeline</h3>
-        <div className="timeline-grid">
-          {/* NLO Process */}
-          <div className="date-group">
-            <label htmlFor="dateProcessedNLO">Date Processed by NLO</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateProcessedNLO"
-                name="dateProcessedNLO"
-                value={formatDateForInput(formData.dateProcessedNLO).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateProcessedNLO).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateProcessedNLO',
-                    value: formatDateForInput(formData.dateProcessedNLO).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          {/* LCAO Process */}
-          <div className="date-group">
-            <label htmlFor="dateForwardedLCAO">Date Forwarded to LCAO (via Email)</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateForwardedLCAO"
-                name="dateForwardedLCAO"
-                value={formatDateForInput(formData.dateForwardedLCAO).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateForwardedLCAO).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateForwardedLCAO',
-                    value: formatDateForInput(formData.dateForwardedLCAO).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          <div className="date-group">
-            <label htmlFor="dateReceivedLCAO">Date Received from LCAO (via Email)</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateReceivedLCAO"
-                name="dateReceivedLCAO"
-                value={formatDateForInput(formData.dateReceivedLCAO).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateReceivedLCAO).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateReceivedLCAO',
-                    value: formatDateForInput(formData.dateReceivedLCAO).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          {/* Attorney Process */}
-          <div className="date-group">
-            <label htmlFor="dateForwardedAttorneys">Date Forwarded to Attorneys (printed)</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateForwardedAttorneys"
-                name="dateForwardedAttorneys"
-                value={formatDateForInput(formData.dateForwardedAttorneys).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateForwardedAttorneys).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateForwardedAttorneys',
-                    value: formatDateForInput(formData.dateForwardedAttorneys).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          <div className="date-group">
-            <label htmlFor="dateReceivedLCAOWithCover">Date Received from LCAO with Cover Page</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateReceivedLCAOWithCover"
-                name="dateReceivedLCAOWithCover"
-                value={formatDateForInput(formData.dateReceivedLCAOWithCover).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateReceivedLCAOWithCover).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateReceivedLCAOWithCover',
-                    value: formatDateForInput(formData.dateReceivedLCAOWithCover).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          {/* Host/NEXUSS Process */}
-          <div className="date-group">
-            <label htmlFor="dateForwardedHost">Date Forwarded to Host Office/Dept/HTE</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateForwardedHost"
-                name="dateForwardedHost"
-                value={formatDateForInput(formData.dateForwardedHost).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateForwardedHost).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateForwardedHost',
-                    value: formatDateForInput(formData.dateForwardedHost).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          <div className="date-group">
-            <label htmlFor="dateForwardedNEXUSS">Date Forwarded to Director External Affairs & MIS</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateForwardedNEXUSS"
-                name="dateForwardedNEXUSS"
-                value={formatDateForInput(formData.dateForwardedNEXUSS).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateForwardedNEXUSS).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateForwardedNEXUSS',
-                    value: formatDateForInput(formData.dateForwardedNEXUSS).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          <div className="date-group">
-            <label htmlFor="dateReceivedNEXUSS">Date Received from Director External Affairs & MIS</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateReceivedNEXUSS"
-                name="dateReceivedNEXUSS"
-                value={formatDateForInput(formData.dateReceivedNEXUSS).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateReceivedNEXUSS).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateReceivedNEXUSS',
-                    value: formatDateForInput(formData.dateReceivedNEXUSS).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          {/* Executive Office Process */}
-          <div className="date-group">
-            <label htmlFor="dateForwardedEO">Date Forwarded to E.O (VP Signature)</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateForwardedEO"
-                name="dateForwardedEO"
-                value={formatDateForInput(formData.dateForwardedEO).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateForwardedEO).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateForwardedEO',
-                    value: formatDateForInput(formData.dateForwardedEO).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
-              />
-            </div>
-          </div>
-          
-          <div className="date-group">
-            <label htmlFor="dateReceivedEO">Date Received from E.O (Signed)</label>
-            <div className="datetime-input">
-              <input
-                type="date"
-                id="dateReceivedEO"
-                name="dateReceivedEO"
-                value={formatDateForInput(formData.dateReceivedEO).date}
-                onChange={handleDateTimeChange}
-              />
-              <input
-                type="time"
-                data-time
-                value={formatDateForInput(formData.dateReceivedEO).time || currentTime}
-                onChange={(e) => handleDateTimeChange({
-                  target: {
-                    name: 'dateReceivedEO',
-                    value: formatDateForInput(formData.dateReceivedEO).date,
-                    getAttribute: () => e.target.value
-                  }
-                })}
+        {/* Remarks Section */}
+        <div className="form-section">
+          <h3><i className="fas fa-comment"></i> Additional Information</h3>
+          <div className="form-grid full-width">
+            <div className="form-group">
+              <label htmlFor="remarks">Remarks</label>
+              <textarea
+                id="remarks"
+                name="remarks"
+                value={formData.remarks}
+                onChange={handleChange}
+                placeholder="Add any additional notes or remarks here..."
               />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Remarks Section */}
-      <div className="form-section">
-        <h3><i className="fas fa-comment"></i> Additional Information</h3>
-        <div className="form-grid full-width">
-          <div className="form-group">
-            <label htmlFor="remarks">Remarks</label>
-            <textarea
-              id="remarks"
-              name="remarks"
-              value={formData.remarks}
-              onChange={handleChange}
-              placeholder="Add any additional notes or remarks here..."
-            />
-          </div>
+        <div className="submit-button-container">
+          <button type="submit" className="submit-button">
+            <i className="fas fa-save"></i> 
+            {initialData ? 'Update Record' : 'Save Record'}
+          </button>
         </div>
-      </div>
+      </form>
 
-      <div className="submit-button-container">
-        <button type="submit" className="submit-button">
-          <i className="fas fa-save"></i> 
-          {initialData ? 'Update Record' : 'Save Record'}
-        </button>
-      </div>
-    </form>
+      <DuplicateModal
+        isOpen={showDuplicateModal}
+        onClose={() => setShowDuplicateModal(false)}
+        onConfirm={() => {
+          setIsFormValid(true);
+          setErrors(prev => ({...prev, companyName: ''}));
+        }}
+        duplicateRecord={duplicateRecord}
+      />
+    </div>
   );
 }
 
