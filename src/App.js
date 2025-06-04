@@ -27,10 +27,39 @@ function App() {
   // Helper function to safely convert Firestore timestamp to Date
   const convertTimestamp = (timestamp) => {
     if (!timestamp) return null;
-    if (timestamp instanceof Timestamp) {
-      return timestamp.toDate();
+    
+    try {
+      // Handle Firestore Timestamp
+      if (timestamp instanceof Timestamp) {
+        return timestamp.toDate();
+      }
+      
+      // Handle ISO string
+      if (typeof timestamp === 'string') {
+        const date = new Date(timestamp);
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+      
+      // Handle Date object
+      if (timestamp instanceof Date) {
+        return timestamp;
+      }
+      
+      // Handle timestamp number (milliseconds since epoch)
+      if (typeof timestamp === 'number') {
+        const date = new Date(timestamp);
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error converting timestamp:', error);
+      return null;
     }
-    return timestamp;
   };
 
   // Listen for auth state changes

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './EditModal.css';
+import { toast } from 'react-hot-toast';
 
 function EditModal({ record, onSave, onClose }) {
   const [formData, setFormData] = useState({
@@ -46,48 +47,83 @@ function EditModal({ record, onSave, onClose }) {
     }));
   };
 
+  // Helper function to format date for input value
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return { date: '', time: '' };
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return { date: '', time: '' };
+      
+      // Format date as YYYY-MM-DD for the HTML5 date input
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      // Format time as HH:mm:ss for the HTML5 time input
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      
+      return {
+        date: `${year}-${month}-${day}`,
+        time: `${hours}:${minutes}:${seconds}`
+      };
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return { date: '', time: '' };
+    }
+  };
+
   // Helper function to handle date-time selection
   const handleDateTimeChange = (e) => {
     const { name, value } = e.target;
     const timeValue = e.target.getAttribute('data-time');
     
-    if (value) {
-      const dateTime = timeValue ? 
-        new Date(`${value}T${timeValue}`) : 
-        new Date(`${value}T${currentTime}`);
+    try {
+      if (value) {
+        // Create a new date object with the selected date and time
+        const dateTime = timeValue ? 
+          new Date(`${value}T${timeValue}`) : 
+          new Date(`${value}T${currentTime}`);
 
-      setFormData(prevState => ({
-        ...prevState,
-        [name]: dateTime.toISOString()
-      }));
-    } else {
-      setFormData(prevState => ({
-        ...prevState,
-        [name]: ''
-      }));
+        // Validate the date
+        if (isNaN(dateTime.getTime())) {
+          console.error('Invalid date created:', dateTime);
+          return;
+        }
+
+        setFormData(prevState => ({
+          ...prevState,
+          [name]: dateTime.toISOString()
+        }));
+      } else {
+        setFormData(prevState => ({
+          ...prevState,
+          [name]: ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error handling date/time change:', error);
+      toast.error('Error updating date/time');
     }
-  };
-
-  // Helper function to format date for input value
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return { date: '', time: '' };
-    const date = new Date(dateString);
-    return {
-      date: date.toISOString().split('T')[0],
-      time: date.toTimeString().split(' ')[0]
-    };
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Make sure we're sending the status field to the server
-    const finalData = {
-      ...formData,
-      // Ensure status is set (default to 'Pending' if missing)
-      status: formData.status || 'Pending'
-    };
-    console.log("Saving record with status:", finalData.status);
-    onSave(finalData);
+    try {
+      // Make sure we're sending the status field to the server
+      const finalData = {
+        ...formData,
+        // Ensure status is set (default to 'Pending' if missing)
+        status: formData.status || 'Pending'
+      };
+      console.log("Saving record with status:", finalData.status);
+      onSave(finalData);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Error saving changes');
+    }
   };
 
   // Update the date input fields in the form

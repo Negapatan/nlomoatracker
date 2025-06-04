@@ -30,7 +30,7 @@ export const addMOARecord = async (data) => {
       emailAddress: data.emailAddress || '',
       contactNumber: data.contactNumber || '',
 
-      // Timeline Dates
+      // Timeline Dates - Convert to Firestore Timestamps
       dateProcessedNLO: data.dateProcessedNLO ? Timestamp.fromDate(new Date(data.dateProcessedNLO)) : null,
       dateForwardedLCAO: data.dateForwardedLCAO ? Timestamp.fromDate(new Date(data.dateForwardedLCAO)) : null,
       dateReceivedLCAO: data.dateReceivedLCAO ? Timestamp.fromDate(new Date(data.dateReceivedLCAO)) : null,
@@ -67,9 +67,28 @@ export const updateMOARecord = async (id, data) => {
     // Create a clean update object
     const updateObj = {};
     
-    // Copy all provided fields to the update object
+    // Convert date fields to Firestore Timestamps
+    const dateFields = [
+      'dateProcessedNLO',
+      'dateForwardedLCAO',
+      'dateReceivedLCAO',
+      'dateForwardedAttorneys',
+      'dateReceivedLCAOWithCover',
+      'dateForwardedHost',
+      'dateForwardedNEXUSS',
+      'dateReceivedNEXUSS',
+      'dateForwardedEO',
+      'dateReceivedEO'
+    ];
+
+    // Process each field
     Object.keys(data).forEach(key => {
-      if (key !== 'id') { // Skip the id field
+      if (key === 'id') return; // Skip the id field
+      
+      if (dateFields.includes(key) && data[key]) {
+        // Convert date strings to Firestore Timestamps
+        updateObj[key] = Timestamp.fromDate(new Date(data[key]));
+      } else {
         updateObj[key] = data[key];
       }
     });
@@ -85,7 +104,7 @@ export const updateMOARecord = async (id, data) => {
       
       // If changing to Completed, ensure completedDate exists
       if (data.status === 'Completed' && !data.completedDate) {
-        updateObj.completedDate = new Date().toISOString();
+        updateObj.completedDate = Timestamp.now();
       }
     }
     
