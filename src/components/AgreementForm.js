@@ -288,14 +288,19 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
   return (
     <div className="agreement-form-container">
       <form onSubmit={handleSubmit} className="agreement-form">
-        <h2>Agreement Tracking Form</h2>
+        <h2>
+          <i className="fas fa-file-contract"></i>
+          Agreement Tracking Form
+        </h2>
         
-        {/* Company Information Section - Simplified */}
+        {/* Company Information Section */}
         <div className="form-section">
           <h3><i className="fas fa-building"></i> Basic Information</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label htmlFor="companyName">Company Name</label>
+              <label htmlFor="companyName">
+                <i className="fas fa-building"></i> Company Name
+              </label>
               <input
                 type="text"
                 id="companyName"
@@ -303,6 +308,7 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
                 value={formData.companyName}
                 onChange={handleChange}
                 className={errors.companyName ? 'input-error' : ''}
+                placeholder="Enter company name"
                 required
               />
               {errors.companyName && (
@@ -317,7 +323,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
               )}
             </div>
             <div className="form-group">
-              <label htmlFor="agreementType">Agreement Type</label>
+              <label htmlFor="agreementType">
+                <i className="fas fa-file-signature"></i> Agreement Type
+              </label>
               <select
                 id="agreementType"
                 name="agreementType"
@@ -339,7 +347,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
           <div className="timeline-grid">
             {/* NLO Process */}
             <div className="date-group">
-              <label htmlFor="dateProcessedNLO">Date Processed by NLO</label>
+              <label htmlFor="dateProcessedNLO">
+                <i className="fas fa-calendar-check"></i> Date Processed by NLO
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -365,7 +375,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             
             {/* LCAO Process */}
             <div className="date-group">
-              <label htmlFor="dateForwardedLCAO">Date Forwarded to LCAO (via Email)</label>
+              <label htmlFor="dateForwardedLCAO">
+                <i className="fas fa-paper-plane"></i> Date Forwarded to LCAO
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -390,7 +402,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             </div>
             
             <div className="date-group">
-              <label htmlFor="dateReceivedLCAO">Date Received from LCAO (via Email)</label>
+              <label htmlFor="dateReceivedLCAO">
+                <i className="fas fa-inbox"></i> Date Received from LCAO
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -416,7 +430,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             
             {/* Attorney Process */}
             <div className="date-group">
-              <label htmlFor="dateForwardedAttorneys">Date Forwarded to Attorneys (printed)</label>
+              <label htmlFor="dateForwardedAttorneys">
+                <i className="fas fa-balance-scale"></i> Date Forwarded to Attorneys
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -441,7 +457,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             </div>
             
             <div className="date-group">
-              <label htmlFor="dateReceivedLCAOWithCover">Date Received from LCAO with Cover Page</label>
+              <label htmlFor="dateReceivedLCAOWithCover">
+                <i className="fas fa-file-alt"></i> Date Received from LCAO with Cover
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -467,7 +485,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             
             {/* Host/NEXUSS Process */}
             <div className="date-group">
-              <label htmlFor="dateForwardedHost">Date Forwarded to Host Office/Dept/HTE</label>
+              <label htmlFor="dateForwardedHost">
+                <i className="fas fa-building"></i> Date Forwarded to Host Office
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -492,7 +512,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             </div>
             
             <div className="date-group">
-              <label htmlFor="dateForwardedNEXUSS">Date Forwarded to Director External Affairs & MIS</label>
+              <label htmlFor="dateForwardedNEXUSS">
+                <i className="fas fa-exchange-alt"></i> Date Forwarded to Director External Affairs
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -517,7 +539,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             </div>
             
             <div className="date-group">
-              <label htmlFor="dateReceivedNEXUSS">Date Received from Director External Affairs & MIS</label>
+              <label htmlFor="dateReceivedNEXUSS">
+                <i className="fas fa-reply"></i> Date Received from Director External Affairs
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -543,7 +567,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             
             {/* Executive Office Process */}
             <div className="date-group">
-              <label htmlFor="dateForwardedEO">Date Forwarded to E.O (VP Signature)</label>
+              <label htmlFor="dateForwardedEO">
+                <i className="fas fa-user-tie"></i> Date Forwarded to E.O
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -568,7 +594,9 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
             </div>
             
             <div className="date-group">
-              <label htmlFor="dateReceivedEO">Date Received from E.O (Signed)</label>
+              <label htmlFor="dateReceivedEO">
+                <i className="fas fa-check-circle"></i> Date Received from E.O
+              </label>
               <div className="datetime-input">
                 <input
                   type="date"
@@ -596,10 +624,12 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
 
         {/* Remarks Section */}
         <div className="form-section">
-          <h3><i className="fas fa-comment"></i> Additional Information</h3>
+          <h3><i className="fas fa-comment-alt"></i> Additional Information</h3>
           <div className="form-grid full-width">
             <div className="form-group">
-              <label htmlFor="remarks">Remarks</label>
+              <label htmlFor="remarks">
+                <i className="fas fa-sticky-note"></i> Remarks
+              </label>
               <textarea
                 id="remarks"
                 name="remarks"

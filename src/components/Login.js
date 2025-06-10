@@ -5,6 +5,7 @@ import { Button, Box, Typography, Container, Alert, TextField } from '@mui/mater
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import backgroundImage from '../assets/nlo-bg.jpg';
+import citLogo from '../assets/CIT512.png';
 
 const Login = () => {
   const [password, setPassword] = useState('');
@@ -37,8 +38,18 @@ const Login = () => {
       <div className="login-background" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
       <Container component="main" maxWidth="xs">
         <Box className="login-box">
+          <div className="logo-container">
+            <div className="logo-circle">
+              <img src={citLogo} alt="CIT-U Seal" className="cit-logo-img" />
+            </div>
+          </div>
+          
           <Typography component="h1" variant="h5" className="login-title">
             MOA MONITORING SYSTEM
+          </Typography>
+          
+          <Typography variant="subtitle1" className="login-subtitle">
+            Networking and Linkages Office
           </Typography>
           
           {error && (
@@ -60,6 +71,11 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="login-input"
+              InputProps={{
+                startAdornment: (
+                  <i className="fas fa-lock" style={{ marginRight: '10px', color: '#800000' }}></i>
+                ),
+              }}
             />
             <Button
               type="submit"
@@ -67,10 +83,15 @@ const Login = () => {
               variant="contained"
               className="login-button"
               disabled={loading}
+              startIcon={loading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-sign-in-alt"></i>}
             >
               {loading ? 'Logging in...' : 'Login as Admin'}
             </Button>
           </Box>
+
+          <Typography variant="body2" className="login-footer">
+            <i className="fas fa-shield-alt"></i> Secure Access Only
+          </Typography>
         </Box>
       </Container>
     </div>

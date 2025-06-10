@@ -4,6 +4,7 @@ import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import citLogo from '../assets/CIT512.png';
 
 function Sidebar({ activeTab, setActiveTab }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -94,7 +95,14 @@ function Sidebar({ activeTab, setActiveTab }) {
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        {!isCollapsed && <h2>NLO MONITORING</h2>}
+        <div className="sidebar-logo-area">
+          {!isCollapsed && (
+            <div className="sidebar-logo-circle">
+              <img src={citLogo} alt="CIT-U Seal" className="sidebar-logo-img" />
+            </div>
+          )}
+          {!isCollapsed && <h2>CIT-U NLO</h2>}
+        </div>
         {isCollapsed ? (
           <button 
             className="collapse-button"
@@ -131,6 +139,8 @@ function Sidebar({ activeTab, setActiveTab }) {
             </button>
           ))}
         </nav>
+
+        <div className="sidebar-divider"></div>
 
         <div className="bottom-section">
           <button className="logout-button" onClick={handleLogout}>

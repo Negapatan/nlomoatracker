@@ -36,7 +36,25 @@ function EditModal({ record, onSave, onClose }) {
   }, []);
 
   useEffect(() => {
-    setFormData(record);
+    if (record) {
+      // Ensure all date fields are properly formatted
+      const formattedRecord = {
+        ...record,
+        // Convert any existing date strings to ISO format
+        dateProcessedNLO: record.dateProcessedNLO ? new Date(record.dateProcessedNLO).toISOString() : '',
+        dateForwardedLCAO: record.dateForwardedLCAO ? new Date(record.dateForwardedLCAO).toISOString() : '',
+        dateReceivedLCAO: record.dateReceivedLCAO ? new Date(record.dateReceivedLCAO).toISOString() : '',
+        dateForwardedAttorneys: record.dateForwardedAttorneys ? new Date(record.dateForwardedAttorneys).toISOString() : '',
+        dateReceivedLCAOWithCover: record.dateReceivedLCAOWithCover ? new Date(record.dateReceivedLCAOWithCover).toISOString() : '',
+        dateForwardedHost: record.dateForwardedHost ? new Date(record.dateForwardedHost).toISOString() : '',
+        dateForwardedNEXUSS: record.dateForwardedNEXUSS ? new Date(record.dateForwardedNEXUSS).toISOString() : '',
+        dateReceivedNEXUSS: record.dateReceivedNEXUSS ? new Date(record.dateReceivedNEXUSS).toISOString() : '',
+        dateForwardedEO: record.dateForwardedEO ? new Date(record.dateForwardedEO).toISOString() : '',
+        dateReceivedEO: record.dateReceivedEO ? new Date(record.dateReceivedEO).toISOString() : '',
+        completedDate: record.completedDate ? new Date(record.completedDate).toISOString() : null
+      };
+      setFormData(formattedRecord);
+    }
   }, [record]);
 
   const handleChange = (e) => {
@@ -83,9 +101,17 @@ function EditModal({ record, onSave, onClose }) {
     try {
       if (value) {
         // Create a new date object with the selected date and time
-        const dateTime = timeValue ? 
-          new Date(`${value}T${timeValue}`) : 
-          new Date(`${value}T${currentTime}`);
+        let dateTime;
+        if (timeValue) {
+          dateTime = new Date(`${value}T${timeValue}`);
+        } else {
+          // If no time is provided, use the existing time or default to current time
+          const existingDate = formData[name] ? new Date(formData[name]) : new Date();
+          const hours = existingDate.getHours().toString().padStart(2, '0');
+          const minutes = existingDate.getMinutes().toString().padStart(2, '0');
+          const seconds = existingDate.getSeconds().toString().padStart(2, '0');
+          dateTime = new Date(`${value}T${hours}:${minutes}:${seconds}`);
+        }
 
         // Validate the date
         if (isNaN(dateTime.getTime())) {
@@ -98,6 +124,7 @@ function EditModal({ record, onSave, onClose }) {
           [name]: dateTime.toISOString()
         }));
       } else {
+        // When clearing the date, also clear the time
         setFormData(prevState => ({
           ...prevState,
           [name]: ''
@@ -262,7 +289,7 @@ function EditModal({ record, onSave, onClose }) {
                       setFormData({
                         ...formData,
                         status: isCompleted ? 'Completed' : 'Pending',
-                        completedDate: isCompleted ? new Date().toISOString() : ''
+                        completedDate: isCompleted ? new Date().toISOString() : null
                       });
                     }}
                   />

@@ -33,15 +33,15 @@
   bottom: 0;
   background-size: cover;
   background-position: center;
-  filter: brightness(0.5) blur(8px);
+  filter: brightness(0.4) blur(8px);
   z-index: 0;
   transform: scale(1.1);
 }
 
 .login-box {
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(255, 255, 255, 0.95);
   padding: 40px 50px;
-  border-radius: 15px;
+  border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
@@ -54,25 +54,58 @@
   width: 90%;
   margin: 0 auto;
   position: absolute;
-  top: 30%;
+  top: 50%;
   left: 50%;
-  transform: translate(-50%, -45%);
-  margin-top: 20px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.login-logo {
-  width: 180px;
-  height: auto;
+.logo-container {
   margin-bottom: 24px;
+}
+
+.logo-circle {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #800000, #600000);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 4px 15px rgba(128, 0, 0, 0.3);
+  border: 3px solid #FFD700;
+  overflow: hidden;
+}
+
+.cit-logo-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  display: block;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.logo-circle i {
+  font-size: 40px;
+  color: #FFD700;
 }
 
 .login-title {
   color: #800000 !important;
-  margin-bottom: 32px !important;
+  margin-bottom: 8px !important;
   font-weight: 700 !important;
-  font-size: 2rem !important;
+  font-size: 1.8rem !important;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.login-subtitle {
+  color: #666 !important;
+  margin-bottom: 32px !important;
+  font-size: 1.1rem !important;
+  font-weight: 500 !important;
 }
 
 .login-input {
@@ -80,8 +113,14 @@
 }
 
 .login-input .MuiOutlinedInput-root {
-  border-radius: 8px;
+  border-radius: 12px;
   background-color: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+}
+
+.login-input .MuiOutlinedInput-root:hover {
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(128, 0, 0, 0.1);
 }
 
 .login-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
@@ -94,39 +133,101 @@
 }
 
 .login-button {
-  background-color: #800000 !important;
+  background: linear-gradient(135deg, #800000, #600000) !important;
   color: #FFD700 !important;
   padding: 12px 0 !important;
   font-size: 1.1rem !important;
   text-transform: uppercase !important;
   margin-top: 24px !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   transition: all 0.3s ease !important;
   letter-spacing: 1px;
   font-weight: 600 !important;
+  box-shadow: 0 4px 15px rgba(128, 0, 0, 0.2) !important;
 }
 
 .login-button:hover {
-  background-color: #600000 !important;
-  box-shadow: 0 4px 12px rgba(128, 0, 0, 0.3) !important;
+  background: linear-gradient(135deg, #600000, #400000) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(128, 0, 0, 0.3) !important;
+}
+
+.login-button:active {
+  transform: translateY(0);
 }
 
 .login-button:disabled {
-  background-color: #cccccc !important;
+  background: #cccccc !important;
   color: #666666 !important;
+  box-shadow: none !important;
 }
 
+.login-footer {
+  margin-top: 24px !important;
+  color: #666 !important;
+  font-size: 0.9rem !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-footer i {
+  color: #800000;
+}
+
+/* Loading animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fa-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive adjustments */
 @media (max-width: 600px) {
   .login-box {
-    margin: 20px;
     padding: 30px;
+    width: 85%;
   }
 
-  .login-logo {
-    width: 140px;
+  .logo-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .cit-logo-img {
+    width: 70px;
+    height: 70px;
+  }
+
+  .logo-circle i {
+    font-size: 32px;
   }
 
   .login-title {
-    font-size: 1.8rem !important;
+    font-size: 1.5rem !important;
   }
+
+  .login-subtitle {
+    font-size: 1rem !important;
+  }
+}
+
+/* Add animation for the login box */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.login-box {
+  animation: fadeInUp 0.5s ease-out;
 } 
