@@ -180,6 +180,23 @@ function EditModal({ record, onSave, onClose }) {
     </div>
   );
 
+  // Helper to check if a date field is filled
+  const isDateFilled = (dateField) => {
+    return formData[dateField] && formData[dateField] !== '';
+  };
+
+  // Calculate current step based on filled dates
+  const calculateCurrentStep = () => {
+    if (isDateFilled('dateReceivedEO')) return 5;
+    if (isDateFilled('dateReceivedNEXUSS')) return 4;
+    if (isDateFilled('dateReceivedLCAOWithCover')) return 3;
+    if (isDateFilled('dateReceivedLCAO')) return 2;
+    if (isDateFilled('dateProcessedNLO')) return 1;
+    return 0;
+  };
+
+  const currentStep = calculateCurrentStep();
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -197,8 +214,25 @@ function EditModal({ record, onSave, onClose }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="edit-form">
-          <div className="form-section">
+        <div className="process-timeline">
+          {[
+            { step: 1, label: 'NLO Process' },
+            { step: 2, label: 'LCAO Review' },
+            { step: 3, label: 'Attorney Review' },
+            { step: 4, label: 'NEXUSS Process' },
+            { step: 5, label: 'Executive Office' }
+          ].map(({ step, label }) => (
+            <div key={step} className="timeline-step">
+              <div className={`step-circle ${step === currentStep ? 'active' : step < currentStep ? 'completed' : ''}`}>
+                {step < currentStep ? <i className="fas fa-check"></i> : step}
+              </div>
+              <div className="step-label">{label}</div>
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="edit-form">          <div className="form-section">
+            <span className="step-indicator">Basic Details</span>
             <h3>Basic Information</h3>
             <div className="form-grid">
               <div className="form-group">
@@ -228,6 +262,7 @@ function EditModal({ record, onSave, onClose }) {
           </div>
 
           <div className="form-section">
+            <span className="step-indicator">Step 1</span>
             <h3>NLO & LCAO Process</h3>
             <div className="form-grid">
               {renderDateTimeInput('dateProcessedNLO', 'NLO Process Date')}
@@ -237,6 +272,7 @@ function EditModal({ record, onSave, onClose }) {
           </div>
 
           <div className="form-section">
+            <span className="step-indicator">Step 2</span>
             <h3>Attorney Process</h3>
             <div className="form-grid">
               {renderDateTimeInput('dateForwardedAttorneys', 'To Attorneys')}
@@ -245,7 +281,8 @@ function EditModal({ record, onSave, onClose }) {
           </div>
 
           <div className="form-section">
-            <h3>Host & NEXUSS_NLO Process</h3>
+            <span className="step-indicator">Step 3</span>
+            <h3>Host & NEXUSS Process</h3>
             <div className="form-grid">
               {renderDateTimeInput('dateForwardedHost', 'To Host')}
               {renderDateTimeInput('dateForwardedNEXUSS', 'To Director External Affairs & MIS')}
@@ -254,6 +291,7 @@ function EditModal({ record, onSave, onClose }) {
           </div>
 
           <div className="form-section">
+            <span className="step-indicator">Step 4</span>
             <h3>Executive Office Process</h3>
             <div className="form-grid">
               {renderDateTimeInput('dateForwardedEO', 'To EO')}
@@ -274,10 +312,24 @@ function EditModal({ record, onSave, onClose }) {
             </div>
           </div>
           
-          {/* Simplified Completion Toggle Section */}
-          <div className="form-section finish-section">
+          {/* Simplified Completion Toggle Section */}          <div className="form-section finish-section">
+            <span className="step-indicator">Final Step</span>
             <h3>Process Completion</h3>
             <div className="finish-moa-container">
+              <div className="process-summary">
+                <h4>Agreement Progress</h4>
+                <div className="progress-stats">
+                  <div className="stat-item">
+                    <i className="fas fa-tasks"></i>
+                    <span>Steps Completed: {currentStep} of 5</span>
+                  </div>
+                  <div className="stat-item">
+                    <i className="fas fa-clock"></i>
+                    <span>Current Status: {formData.status}</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="completion-toggle">
                 <label className="toggle-label">
                   <input
@@ -285,6 +337,13 @@ function EditModal({ record, onSave, onClose }) {
                     checked={formData.status === 'Completed'}
                     onChange={(e) => {
                       const isCompleted = e.target.checked;
+                      const allStepsCompleted = currentStep === 5;
+                      
+                      if (isCompleted && !allStepsCompleted) {
+                        toast.warning('Please complete all steps before marking as completed');
+                        return;
+                      }
+
                       console.log("Setting status to:", isCompleted ? 'Completed' : 'Pending');
                       setFormData({
                         ...formData,
@@ -305,7 +364,9 @@ function EditModal({ record, onSave, onClose }) {
                 <br />
                 {formData.status === 'Completed' 
                   ? 'This MOA has been marked as completed and will appear in the Completed Agreements section.'
-                  : 'Toggle this switch when all steps of the MOA process are finished.'}
+                  : currentStep === 5 
+                    ? 'All steps are completed. You can now mark this agreement as completed.'
+                    : `${5 - currentStep} steps remaining before completion.`}
               </p>
             </div>
           </div>

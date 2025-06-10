@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AgreementTable.css';
 import EditModal from './EditModal';
 import { toast } from 'react-toastify';
@@ -13,6 +14,7 @@ const LoadingState = () => (
 );
 
 function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -211,17 +213,8 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
   };
 
   const handleEdit = (record) => {
-    setEditingRecord(record);
-    toast.info('Editing record...', {
-      position: "bottom-right",
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      className: 'edit-toast'
-    });
+    onEdit(record);
+    navigate('/', { state: { editRecord: record } });
   };
 
   const handleDelete = (record) => {
@@ -570,4 +563,4 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
   );
 }
 
-export default AgreementTable; 
+export default AgreementTable;
