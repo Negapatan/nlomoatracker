@@ -155,11 +155,6 @@ function App() {
     }
   };
 
-  const handleEdit = (record) => {
-    setEditingRecord(record);
-    setActiveTab('form');
-  };
-
   const handleDelete = async (recordToDelete) => {
     try {
       await deleteMOARecord(recordToDelete.id);
@@ -203,7 +198,6 @@ function App() {
       case 'records':
         return <AgreementTable 
           records={records} 
-          onEdit={handleEdit} 
           onDelete={handleDelete} 
           isLoading={isLoading}
           hasError={hasError}

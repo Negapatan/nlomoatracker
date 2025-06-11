@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './AgreementTable.css';
 import EditModal from './EditModal';
 import { toast } from 'react-toastify';
@@ -13,8 +12,7 @@ const LoadingState = () => (
   </div>
 );
 
-function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
-  const navigate = useNavigate();
+function AgreementTable({ records, onDelete, isLoading, hasError }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -213,8 +211,7 @@ function AgreementTable({ records, onEdit, onDelete, isLoading, hasError }) {
   };
 
   const handleEdit = (record) => {
-    onEdit(record);
-    navigate('/', { state: { editRecord: record } });
+    setEditingRecord(record);
   };
 
   const handleDelete = (record) => {
