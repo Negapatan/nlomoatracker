@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import CompletionToggleModal from './CompletionToggleModal';
+import ExportToExcel from './ExportToExcel';
 import './FinishedAgreement.css';
 
 function FinishedAgreement() {
@@ -179,15 +180,18 @@ function FinishedAgreement() {
             </span>
           </div>
         </div>
-        <button 
-          className="refresh-button" 
-          onClick={fetchCompletedAgreements}
-          disabled={isRefreshing}
-          title="Refresh completed agreements"
-        >
-          <i className={`fas fa-sync-alt ${isRefreshing ? 'fa-spin' : ''}`}></i>
-          <span>Refresh</span>
-        </button>
+        <div className="header-actions-group">
+          <button 
+            className="refresh-button" 
+            onClick={fetchCompletedAgreements}
+            disabled={isRefreshing}
+            title="Refresh completed agreements"
+          >
+            <i className={`fas fa-sync-alt ${isRefreshing ? 'fa-spin' : ''}`}></i>
+            <span>Refresh</span>
+          </button>
+          <ExportToExcel status="Completed" />
+        </div>
       </div>
       
       <div className="filters-container">

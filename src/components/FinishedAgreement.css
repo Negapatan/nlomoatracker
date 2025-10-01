@@ -270,6 +270,12 @@
   font-style: italic;
 }
 
+.header-actions-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .finished-agreement-container {
