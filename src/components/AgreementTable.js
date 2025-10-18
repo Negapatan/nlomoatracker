@@ -22,6 +22,7 @@ function AgreementTable({ records, onDelete, isLoading, hasError }) {
   const recordsPerPage = 10;
   const [editingRecord, setEditingRecord] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+  const [activeTab, setActiveTab] = useState('agreement'); // 'agreement' or 'student'
 
   // Debounce search term
   useEffect(() => {
@@ -54,6 +55,19 @@ function AgreementTable({ records, onDelete, isLoading, hasError }) {
   // Check if a record is completed
   const isCompleted = (record) => {
     return record.dateReceivedEO !== '';
+  };
+
+  // Helper to get student names as array
+  const getStudentNamesArray = (record) => {
+    if (Array.isArray(record.studentNames)) return record.studentNames;
+    if (typeof record.studentNames === 'string') {
+      // Split by comma or newline, trim whitespace
+      return record.studentNames
+        .split(/[,\n]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+    return [];
   };
 
   // Optimize search, filter, and sort logic
@@ -97,7 +111,12 @@ function AgreementTable({ records, onDelete, isLoading, hasError }) {
     }
     
     // Search fields with their weights (higher weight = more important)
-    const searchFields = [
+    const searchFields = activeTab === 'student' ? [
+      { field: 'studentNames', weight: 4 },
+      { field: 'studentCourse', weight: 3 },
+      { field: 'companyName', weight: 2 },
+      { field: 'agreementType', weight: 1 }
+    ] : [
       { field: 'companyName', weight: 3 },
       { field: 'agreementType', weight: 2 },
       { field: 'remarks', weight: 1 },
@@ -157,7 +176,7 @@ function AgreementTable({ records, onDelete, isLoading, hasError }) {
     }
     
     return filtered;
-  }, [pendingRecords, debouncedSearchTerm, filterType, filterYear, sortConfig]);
+  }, [pendingRecords, debouncedSearchTerm, filterType, filterYear, sortConfig, activeTab]);
 
   // Pagination calculations
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -331,7 +350,9 @@ function AgreementTable({ records, onDelete, isLoading, hasError }) {
             <i className="fas fa-search"></i>
             <input 
               type="text" 
-              placeholder="Search by company name, type, or remarks..." 
+              placeholder={activeTab === 'student' ? 
+                "Search by student name, course, or company..." : 
+                "Search by company name, type, or remarks..."} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -380,29 +401,67 @@ function AgreementTable({ records, onDelete, isLoading, hasError }) {
       {renderStatistics()}
 
       <div className="records-info">
-        Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} records
+        <div className="records-count">
+          Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredRecords.length)} of {filteredRecords.length} records
+        </div>
+        <div className="tab-buttons">
+          <button 
+            className={`tab-button ${activeTab === 'agreement' ? 'active' : ''}`}
+            onClick={() => setActiveTab('agreement')}
+          >
+            <i className="fas fa-file-contract"></i>
+            Agreement View
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'student' ? 'active' : ''}`}
+            onClick={() => setActiveTab('student')}
+          >
+            <i className="fas fa-user-graduate"></i>
+            Student View
+          </button>
+        </div>
       </div>
 
       <div className="table-wrapper">
         <table className="agreement-table">
           <thead>
             <tr>
-              <th className="column-number">#</th>
-              <th className="column-company" onClick={() => requestSort('companyName')}>
-                Company Name {getSortDirectionIndicator('companyName')}
-              </th>
-              <th className="column-type" onClick={() => requestSort('agreementType')}>
-                Type {getSortDirectionIndicator('agreementType')}
-              </th>
-              <th className="column-date" onClick={() => requestSort('dateProcessedNLO')}>
-                NLO Process {getSortDirectionIndicator('dateProcessedNLO')}
-              </th>
-              <th className="column-date">LCAO Process</th>
-              <th className="column-date">Attorney Process</th>
-              <th className="column-date">Host/NEXUSS</th>
-              <th className="column-date">EO Process</th>
-              <th className="column-remarks">Remarks</th>
-              <th className="column-actions">Actions</th>
+              {activeTab === 'student' ? (
+                <>
+                  <th className="column-number">#</th>
+                  <th className="column-student" onClick={() => requestSort('studentNames')}>
+                    Student Name(s) {getSortDirectionIndicator('studentNames')}
+                  </th>
+                  <th className="column-course" onClick={() => requestSort('studentCourse')}>
+                    Student Course {getSortDirectionIndicator('studentCourse')}
+                  </th>
+                  <th className="column-company" onClick={() => requestSort('companyName')}>
+                    Company Name {getSortDirectionIndicator('companyName')}
+                  </th>
+                  <th className="column-date" onClick={() => requestSort('dateProcessedNLO')}>
+                    Date Processed {getSortDirectionIndicator('dateProcessedNLO')}
+                  </th>
+                </>
+              ) : (
+                <>
+                  <th className="column-number">#</th>
+                  <th className="column-company" onClick={() => requestSort('companyName')}>
+                    Company Name {getSortDirectionIndicator('companyName')}
+                  </th>
+                  <th className="column-type" onClick={() => requestSort('agreementType')}>
+                    Type {getSortDirectionIndicator('agreementType')}
+                  </th>
+                  <th className="column-date" onClick={() => requestSort('dateProcessedNLO')}>
+                    NLO Process {getSortDirectionIndicator('dateProcessedNLO')}
+                  </th>
+                  <th className="column-date">LCAO Process</th>
+                  <th className="column-date">Attorney Process</th>
+                  <th className="column-date">Host/NEXUSS</th>
+                  <th className="column-date">EO Process</th>
+                  <th className="column-remarks">Remarks</th>
+                  <th className="column-actions">Actions</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -410,101 +469,134 @@ function AgreementTable({ records, onDelete, isLoading, hasError }) {
               currentRecords.map((record, index) => (
                 <tr key={record.id || index} className={isCompleted(record) ? 'completed' : ''}>
                   <td className="column-number">{indexOfFirstRecord + index + 1}</td>
-                  <td className="column-company">
-                    <div className="company-info">
-                      <span className="company-name">{record.companyName}</span>
-                    </div>
-                  </td>
-                  <td className="column-type">
-                    <span className="agreement-type">{record.agreementType}</span>
-                  </td>
-                  <td className="column-date">
-                    <div className="date-info">
-                      <div>
-                        <span className="date-label">Processed:</span>
-                        <span className="date-value">{formatDate(record.dateProcessedNLO)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="column-date">
-                    <div className="date-info">
-                      <div>
-                        <span className="date-label">Forwarded:</span>
-                        <span className="date-value">{formatDate(record.dateForwardedLCAO)}</span>
-                      </div>
-                      <div>
-                        <span className="date-label">Received:</span>
-                        <span className="date-value">{formatDate(record.dateReceivedLCAO)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="column-date">
-                    <div className="date-info">
-                      <div>
-                        <span className="date-label">Forwarded:</span>
-                        <span className="date-value">{formatDate(record.dateForwardedAttorneys)}</span>
-                      </div>
-                      <div>
-                        <span className="date-label">Received:</span>
-                        <span className="date-value">{formatDate(record.dateReceivedLCAOWithCover)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="column-date">
-                    <div className="date-info">
-                      <div>
-                        <span className="date-label">To Host:</span>
-                        <span className="date-value">{formatDate(record.dateForwardedHost)}</span>
-                      </div>
-                      <div>
-                        <span className="date-label">To NEXUSS:</span>
-                        <span className="date-value">{formatDate(record.dateForwardedNEXUSS)}</span>
-                      </div>
-                      <div>
-                        <span className="date-label">From NEXUSS:</span>
-                        <span className="date-value">{formatDate(record.dateReceivedNEXUSS)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="column-date">
-                    <div className="date-info">
-                      <div>
-                        <span className="date-label">Forwarded:</span>
-                        <span className="date-value">{formatDate(record.dateForwardedEO)}</span>
-                      </div>
-                      <div>
-                        <span className="date-label">Received:</span>
-                        <span className="date-value">{formatDate(record.dateReceivedEO)}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td 
-                    className="column-remarks remarks-cell" 
-                    data-full-text={record.remarks || '-'}
-                  >
-                    {record.remarks || '-'}
-                  </td>
-                  <td className="column-actions">
-                    <button 
-                      className="action-button" 
-                      title="Edit"
-                      onClick={() => handleEdit(record)}
-                    >
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button 
-                      className="action-button" 
-                      title="Delete"
-                      onClick={() => handleDelete(record)}
-                    >
-                      <i className="fas fa-trash-alt"></i>
-                    </button>
-                  </td>
+                  {activeTab === 'student' ? (
+                    <>
+                      <td className="column-student">
+                        <div className="student-info">
+                          {getStudentNamesArray(record).length > 0 ? (
+                            <ul className="student-names-list">
+                              {getStudentNamesArray(record).map((name, idx) => (
+                                <li key={idx} className="student-name">{name}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span className="student-name">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="column-course">
+                        <span className="student-course">{record.studentCourse || '-'}</span>
+                      </td>
+                      <td className="column-company">
+                        <div className="company-info">
+                          <span className="company-name">{record.companyName}</span>
+                        </div>
+                      </td>
+                      <td className="column-date">
+                        <div className="date-info">
+                          <span className="date-value">{formatDate(record.dateProcessedNLO)}</span>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="column-company">
+                        <div className="company-info">
+                          <span className="company-name">{record.companyName}</span>
+                        </div>
+                      </td>
+                      <td className="column-type">
+                        <span className="agreement-type">{record.agreementType}</span>
+                      </td>
+                      <td className="column-date">
+                        <div className="date-info">
+                          <div>
+                            <span className="date-label">Processed:</span>
+                            <span className="date-value">{formatDate(record.dateProcessedNLO)}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="column-date">
+                        <div className="date-info">
+                          <div>
+                            <span className="date-label">Forwarded:</span>
+                            <span className="date-value">{formatDate(record.dateForwardedLCAO)}</span>
+                          </div>
+                          <div>
+                            <span className="date-label">Received:</span>
+                            <span className="date-value">{formatDate(record.dateReceivedLCAO)}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="column-date">
+                        <div className="date-info">
+                          <div>
+                            <span className="date-label">Forwarded:</span>
+                            <span className="date-value">{formatDate(record.dateForwardedAttorneys)}</span>
+                          </div>
+                          <div>
+                            <span className="date-label">Received:</span>
+                            <span className="date-value">{formatDate(record.dateReceivedLCAOWithCover)}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="column-date">
+                        <div className="date-info">
+                          <div>
+                            <span className="date-label">To Host:</span>
+                            <span className="date-value">{formatDate(record.dateForwardedHost)}</span>
+                          </div>
+                          <div>
+                            <span className="date-label">To NEXUSS:</span>
+                            <span className="date-value">{formatDate(record.dateForwardedNEXUSS)}</span>
+                          </div>
+                          <div>
+                            <span className="date-label">From NEXUSS:</span>
+                            <span className="date-value">{formatDate(record.dateReceivedNEXUSS)}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="column-date">
+                        <div className="date-info">
+                          <div>
+                            <span className="date-label">Forwarded:</span>
+                            <span className="date-value">{formatDate(record.dateForwardedEO)}</span>
+                          </div>
+                          <div>
+                            <span className="date-label">Received:</span>
+                            <span className="date-value">{formatDate(record.dateReceivedEO)}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td 
+                        className="column-remarks remarks-cell" 
+                        data-full-text={record.remarks || '-'}
+                      >
+                        {record.remarks || '-'}
+                      </td>
+                      <td className="column-actions">
+                        <button 
+                          className="action-button" 
+                          title="Edit"
+                          onClick={() => handleEdit(record)}
+                        >
+                          <i className="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          className="action-button" 
+                          title="Delete"
+                          onClick={() => handleDelete(record)}
+                        >
+                          <i className="fas fa-trash-alt"></i>
+                        </button>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="10" className="no-records">
+                <td colSpan={activeTab === 'student' ? '5' : '10'} className="no-records">
                   {searchTerm || filterType !== 'all' ? 
                     'No matching records found' : 
                     'No records to display'}

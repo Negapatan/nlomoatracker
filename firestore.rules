@@ -32,6 +32,8 @@ service cloud.firestore {
           data.agreementType is string &&
           validStatus &&
           validCompletionData &&
+          (data.studentNames is string || !("studentNames" in data)) &&
+          (data.studentCourse is string || !("studentCourse" in data)) &&
           (data.address is string || !("address" in data)) &&
           (data.contactPerson is string || !("contactPerson" in data)) &&
           (data.designation is string || !("designation" in data)) &&
@@ -49,6 +51,8 @@ service cloud.firestore {
         let validBasicFields = 
           data.companyName is string &&
           data.agreementType is string &&
+          (data.studentNames is string || !("studentNames" in data)) &&
+          (data.studentCourse is string || !("studentCourse" in data)) &&
           (data.address is string || !("address" in data)) &&
           (data.contactPerson is string || !("contactPerson" in data)) &&
           (data.designation is string || !("designation" in data)) &&

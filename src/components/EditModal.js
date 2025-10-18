@@ -6,6 +6,8 @@ function EditModal({ record, onSave, onClose }) {
   const [formData, setFormData] = useState({
     companyName: '',
     agreementType: '',
+    studentNames: [''],
+    studentCourse: '',
     dateProcessedNLO: '',
     dateForwardedLCAO: '',
     dateReceivedLCAO: '',
@@ -51,7 +53,10 @@ function EditModal({ record, onSave, onClose }) {
         dateReceivedNEXUSS: record.dateReceivedNEXUSS ? new Date(record.dateReceivedNEXUSS).toISOString() : '',
         dateForwardedEO: record.dateForwardedEO ? new Date(record.dateForwardedEO).toISOString() : '',
         dateReceivedEO: record.dateReceivedEO ? new Date(record.dateReceivedEO).toISOString() : '',
-        completedDate: record.completedDate ? new Date(record.completedDate).toISOString() : null
+        completedDate: record.completedDate ? new Date(record.completedDate).toISOString() : null,
+        studentNames: Array.isArray(record.studentNames)
+          ? record.studentNames
+          : (typeof record.studentNames === 'string' ? record.studentNames.split(/[,\n]/).map(s => s.trim()).filter(Boolean) : [''])
       };
       setFormData(formattedRecord);
     }
@@ -63,6 +68,28 @@ function EditModal({ record, onSave, onClose }) {
       ...prevState,
       [name]: value
     }));
+  };
+
+  // Student names handlers
+  const handleStudentNameChange = (idx, value) => {
+    setFormData(prev => {
+      const arr = Array.isArray(prev.studentNames) ? [...prev.studentNames] : [''];
+      arr[idx] = value;
+      return { ...prev, studentNames: arr };
+    });
+  };
+  const handleAddStudent = () => {
+    setFormData(prev => ({
+      ...prev,
+      studentNames: [...(Array.isArray(prev.studentNames) ? prev.studentNames : ['']), '']
+    }));
+  };
+  const handleRemoveStudent = (idx) => {
+    setFormData(prev => {
+      const arr = Array.isArray(prev.studentNames) ? [...prev.studentNames] : [];
+      arr.splice(idx, 1);
+      return { ...prev, studentNames: arr.length ? arr : [''] };
+    });
   };
 
   // Helper function to format date for input value
@@ -139,10 +166,12 @@ function EditModal({ record, onSave, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     try {
-      // Make sure we're sending the status field to the server
+      // Convert studentNames array to comma-separated string for saving
       const finalData = {
         ...formData,
-        // Ensure status is set (default to 'Pending' if missing)
+        studentNames: Array.isArray(formData.studentNames)
+          ? formData.studentNames.filter(Boolean).join(', ')
+          : formData.studentNames,
         status: formData.status || 'Pending'
       };
       console.log("Saving record with status:", finalData.status);
@@ -258,6 +287,50 @@ function EditModal({ record, onSave, onClose }) {
                   <option value="MOU/MOA">MOU/MOA</option>
                 </select>
               </div>
+              <div className="form-group">
+                <label>Student Name(s)</label>
+                {Array.isArray(formData.studentNames) && formData.studentNames.map((name, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={e => handleStudentNameChange(idx, e.target.value)}
+                      placeholder={`Student ${idx + 1} name`}
+                      style={{ flex: 1 }}
+                    />
+                    {formData.studentNames.length > 1 && (
+                      <button
+                        type="button"
+                        className="remove-student-button save-button"
+                        style={{ marginLeft: 4, padding: '2px 6px', fontSize: '0.95em', minWidth: 0 }}
+                        onClick={() => handleRemoveStudent(idx)}
+                        title="Remove Student"
+                      >
+                        <i className="fas fa-minus-circle"></i>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="add-student-button save-button"
+                  style={{ marginTop: 4, padding: '4px 10px', fontSize: '1.1em' }}
+                  onClick={handleAddStudent}
+                  title="Add Student"
+                >
+                  <i className="fas fa-plus-circle"></i>
+                </button>
+              </div>
+              <div className="form-group">
+                <label>Student Course</label>
+                <input
+                  type="text"
+                  name="studentCourse"
+                  value={formData.studentCourse}
+                  onChange={handleChange}
+                  placeholder="Enter student course"
+                />
+              </div>
             </div>
           </div>
 
@@ -335,21 +408,47 @@ function EditModal({ record, onSave, onClose }) {
                   <input
                     type="checkbox"
                     checked={formData.status === 'Completed'}
-                    onChange={(e) => {
-                      const isCompleted = e.target.checked;
-                      const allStepsCompleted = currentStep === 5;
-                      
-                      if (isCompleted && !allStepsCompleted) {
-                        toast.warning('Please complete all steps before marking as completed');
-                        return;
-                      }
+                     onChange={async (e) => {
+                       const isCompleted = e.target.checked;
 
-                      console.log("Setting status to:", isCompleted ? 'Completed' : 'Pending');
+                       console.log("Setting status to:", isCompleted ? 'Completed' : 'Pending');
+                      
+                      // Update local state immediately for UI feedback
+                      const newStatus = isCompleted ? 'Completed' : 'Pending';
+                      const newCompletedDate = isCompleted ? new Date().toISOString() : null;
+                      
                       setFormData({
                         ...formData,
-                        status: isCompleted ? 'Completed' : 'Pending',
-                        completedDate: isCompleted ? new Date().toISOString() : null
+                        status: newStatus,
+                        completedDate: newCompletedDate
                       });
+
+                      // Automatically save the completion status to database
+                      try {
+                        const updateData = {
+                          id: record.id,
+                          status: newStatus,
+                          completedDate: newCompletedDate
+                        };
+                        
+                        await onSave(updateData);
+                        
+                        if (newStatus === 'Completed') {
+                          toast.success('Agreement marked as completed!');
+                        } else {
+                          toast.success('Agreement marked as pending!');
+                        }
+                      } catch (error) {
+                        console.error('Error updating completion status:', error);
+                        toast.error('Failed to update completion status');
+                        
+                        // Revert the local state if save failed
+                        setFormData({
+                          ...formData,
+                          status: formData.status,
+                          completedDate: formData.completedDate
+                        });
+                      }
                     }}
                   />
                   <span className="toggle-switch"></span>
@@ -359,15 +458,13 @@ function EditModal({ record, onSave, onClose }) {
                 </label>
               </div>
               
-              <p className="completion-description">
-                Current status: <strong>{formData.status || 'Pending'}</strong>
-                <br />
-                {formData.status === 'Completed' 
-                  ? 'This MOA has been marked as completed and will appear in the Completed Agreements section.'
-                  : currentStep === 5 
-                    ? 'All steps are completed. You can now mark this agreement as completed.'
-                    : `${5 - currentStep} steps remaining before completion.`}
-              </p>
+               <p className="completion-description">
+                 Current status: <strong>{formData.status || 'Pending'}</strong>
+                 <br />
+                 {formData.status === 'Completed' 
+                   ? 'This MOA has been marked as completed and will appear in the Completed Agreements section.'
+                   : 'You can mark this agreement as completed at any time using the toggle above.'}
+               </p>
             </div>
           </div>
 

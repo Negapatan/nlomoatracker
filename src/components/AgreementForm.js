@@ -53,6 +53,8 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
   const [formData, setFormData] = useState(initialData || {
     companyName: '',
     agreementType: '',
+    studentNames: [''],
+    studentCourse: '',
     dateProcessedNLO: '',
     dateForwardedLCAO: '',
     dateReceivedLCAO: '',
@@ -91,7 +93,12 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        ...initialData,
+        studentNames: Array.isArray(initialData.studentNames)
+          ? initialData.studentNames
+          : (typeof initialData.studentNames === 'string' ? initialData.studentNames.split(/[,\n]/).map(s => s.trim()).filter(Boolean) : [''])
+      });
     }
   }, [initialData]);
 
@@ -175,6 +182,12 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
           <div className="duplicate-details">
             <p><strong>Company Name:</strong> {duplicateRecord?.companyName}</p>
             <p><strong>Agreement Type:</strong> {duplicateRecord?.agreementType}</p>
+            {duplicateRecord?.studentNames && (
+              <p><strong>Student Name(s):</strong> {duplicateRecord?.studentNames}</p>
+            )}
+            {duplicateRecord?.studentCourse && (
+              <p><strong>Student Course:</strong> {duplicateRecord?.studentCourse}</p>
+            )}
             <p><strong>Status:</strong> {duplicateRecord?.status}</p>
           </div>
           <div className="modal-actions">
@@ -205,6 +218,28 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
       ...prevState,
       [name]: value
     }));
+  };
+
+  // Student names handlers
+  const handleStudentNameChange = (idx, value) => {
+    setFormData(prev => {
+      const arr = Array.isArray(prev.studentNames) ? [...prev.studentNames] : [''];
+      arr[idx] = value;
+      return { ...prev, studentNames: arr };
+    });
+  };
+  const handleAddStudent = () => {
+    setFormData(prev => ({
+      ...prev,
+      studentNames: [...(Array.isArray(prev.studentNames) ? prev.studentNames : ['']), '']
+    }));
+  };
+  const handleRemoveStudent = (idx) => {
+    setFormData(prev => {
+      const arr = Array.isArray(prev.studentNames) ? [...prev.studentNames] : [];
+      arr.splice(idx, 1);
+      return { ...prev, studentNames: arr.length ? arr : [''] };
+    });
   };
 
   // Update the formatDateForInput function
@@ -273,7 +308,7 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
     e.preventDefault();
     
     if (isLoading) {
-      toast.warning("Please wait, loading company data...");
+      toast.error("Please wait, loading company data...");
       return false;
     }
     
@@ -282,7 +317,38 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
       return false;
     }
 
-    onSubmit(formData);
+    // Convert studentNames array to comma-separated string for saving
+    const submitData = {
+      ...formData,
+      studentNames: Array.isArray(formData.studentNames)
+        ? formData.studentNames.filter(Boolean).join(', ')
+        : formData.studentNames
+    };
+    onSubmit(submitData);
+    
+    // Auto-clear form after successful submission (only for new records, not edits)
+    if (!initialData) {
+      setFormData({
+        companyName: '',
+        agreementType: '',
+        studentNames: [''],
+        studentCourse: '',
+        dateProcessedNLO: '',
+        dateForwardedLCAO: '',
+        dateReceivedLCAO: '',
+        dateForwardedAttorneys: '',
+        dateReceivedLCAOWithCover: '',
+        dateForwardedHost: '',
+        dateForwardedNEXUSS: '',
+        dateReceivedNEXUSS: '',
+        dateForwardedEO: '',
+        dateReceivedEO: '',
+        remarks: '',
+        status: 'Pending'
+      });
+      setErrors({});
+      setIsFormValid(false);
+    }
   };
 
   return (
@@ -337,6 +403,55 @@ function AgreementForm({ onSubmit, initialData, existingData = [] }) {
                 <option value="OJT MOA">OJT MOA</option>
                 <option value="MOU/MOA">MOU/MOA</option>
               </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="studentNames">
+                <i className="fas fa-user-graduate"></i> Student Name(s)
+              </label>
+              {Array.isArray(formData.studentNames) && formData.studentNames.map((name, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={e => handleStudentNameChange(idx, e.target.value)}
+                    placeholder={`Student ${idx + 1} name`}
+                    style={{ flex: 1 }}
+                  />
+                  {formData.studentNames.length > 1 && (
+                    <button
+                      type="button"
+                      className="remove-student-button submit-button"
+                      style={{ marginLeft: 4, padding: '2px 6px', fontSize: '0.95em', minWidth: 0 }}
+                      onClick={() => handleRemoveStudent(idx)}
+                      title="Remove Student"
+                    >
+                      <i className="fas fa-minus-circle"></i>
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                className="add-student-button submit-button"
+                style={{ marginTop: 4, padding: '4px 10px', fontSize: '1.1em' }}
+                onClick={handleAddStudent}
+                title="Add Student"
+              >
+                <i className="fas fa-plus-circle"></i>
+              </button>
+            </div>
+            <div className="form-group">
+              <label htmlFor="studentCourse">
+                <i className="fas fa-graduation-cap"></i> Student Course
+              </label>
+              <input
+                type="text"
+                id="studentCourse"
+                name="studentCourse"
+                value={formData.studentCourse}
+                onChange={handleChange}
+                placeholder="Enter student course"
+              />
             </div>
           </div>
         </div>

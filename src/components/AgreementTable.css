@@ -759,4 +759,115 @@
   .pagination-numbers {
     order: -1;
   }
+}
+
+/* Tab functionality styles */
+.records-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+}
+
+.records-count {
+  color: var(--gray-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: var(--white);
+  color: var(--gray-dark);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  background-color: #f9fafb;
+  border-color: var(--primary-light);
+}
+
+.tab-button.active {
+  background-color: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+}
+
+.tab-button i {
+  font-size: 0.9rem;
+}
+
+/* Student table specific styles */
+.column-student {
+  width: 20%;
+  min-width: 150px;
+}
+
+.column-course {
+  width: 18%;
+  min-width: 120px;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.student-name {
+  font-weight: 500;
+  color: var(--primary-dark);
+}
+
+.student-course {
+  font-weight: 500;
+  color: var(--secondary);
+}
+
+/* Responsive adjustments for tabs */
+@media (max-width: 1024px) {
+  .records-info {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .tab-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .tab-button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .tab-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .tab-button i {
+    font-size: 0.8rem;
+  }
+  
+  .column-student, .column-course {
+    min-width: 100px;
+  }
 } 

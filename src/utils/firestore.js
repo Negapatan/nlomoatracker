@@ -21,8 +21,10 @@ export const addMOARecord = async (data) => {
     const docRef = await addDoc(collection(db, MOA_COLLECTION), {
       // Company Information
       companyName: data.companyName || '',
-      address: data.address || '',
       agreementType: data.agreementType || '',
+      studentNames: data.studentNames || '',
+      studentCourse: data.studentCourse || '',
+      address: data.address || '',
 
       // Contact Information
       contactPerson: data.contactPerson || '',
